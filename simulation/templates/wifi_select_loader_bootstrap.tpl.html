@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="author" content="Jonas Scharpf aka brainelectronics">
+  <title>Select WiFi</title>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/list-groups.css') }}" rel="stylesheet">
+  <!-- <link href="style.css" rel="stylesheet"> -->
+</head>
+<body style="margin:0;" class="text-center">
+  <div id="overlay" class="overlay">
+    <div id="loader" class="loader"></div>
+  </div>
+
+  <div style="display:none;" id="myDiv" class="animate-bottom">
+    <h4>Select a WiFi network</h4>
+    <div class="list-group list-group-checkable">
+      <form action="save_wifi_config" method="post" id="save_wifi_config_form">
+        <div id="wifi_items">
+          {% for ele in wifi_nets %}
+            <input class="list-group-item-check" type="radio" name="bssid" id="{{ ele['bssid'] }}" value="{{ ele['bssid'] }}">
+            <label class="list-group-item py-3" for="{{ ele['bssid'] }}">
+              {{ ele['ssid'] }}
+              <span class="d-block small opacity-50">
+                Signal quality {{ ele['quality'] }}&#37;, BSSID {{ ele['bssid'] }}
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+        <input type="text" class="w-100" name="ssid" id="ssid" placeholder="Custom Network Name">
+        <br>
+        <input type="password" class="w-100" name="password" id="password" placeholder="Passwort" onkeydown="if(event.keyCode==13)document.getElementById('save').click()"/>
+        <br>
+        <button type="submit" id="save" value="Save" class="w-100 btn btn-lg btn-primary">Submit</button>
+        <form>
+          <input type="button" class="w-100 btn btn-lg btn-warning" onclick="window.location.href = '/';" value="Go Back"/>
+        </form>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function(e) {
+      setTimeout(showPage, 1000);
+      setTimeout(get_new_networks, 100);
+      var myInterval = setInterval(get_new_networks, 10000);
+    };
+    function showPage() {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("myDiv").style.display = "block";
+      //document.getElementById("rcorners3").style.display = "block";
+      document.getElementById("overlay").style.display = "none";
+    };
+    document.getElementById("save_wifi_config_form").onsubmit = function(e) {
+      window.onbeforeunload = null;
+      return true;
+    };
+    function get_new_networks() {
+      // console.log('Getting new networks');
+      var xmlhttp = new XMLHttpRequest();
+      var url = "scan_result";
+      xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          var myArr = JSON.parse(this.responseText);
+          console.log(myArr);
+          update_wifi_nets_selection(myArr);
+        }
+      };
+      xmlhttp.open("GET", url);
+      xmlhttp.send();
+    }
+    function update_wifi_nets_selection(arr) {
+      console.log('Updating options list function');
+      /*
+      var oldSel = document.getElementById("wifi_network");
+      // backup current selection
+      var selected_index = oldSel.selectedIndex;
+      // console.log('Add options to cleared element' + oldSel.options);
+      for (var i = 0; i < arr.length; i++) {
+        var opt = document.createElement('option');
+        var new_option_text = arr[i].ssid + ' - ' + arr[i].quality + '%';
+        // 'NET-WORK_A - 42%'
+        opt.text = new_option_text;
+        opt.value = arr[i].bssid;
+        console.log('checking: ' + new_option_text + ', value: ' + opt.value);
+        is_unique = true;
+        for (var j = 0; j < oldSel.options.length; j++) {
+          let old_text = oldSel.options[j].text;
+          const old_text_array = old_text.split("-");
+          // ['NET', 'WORK_A ', ' 42%']
+          const old_ssid = old_text_array.slice(0, old_text_array.length - 1).join("-");
+          // 'NET-WORK_A '
+          const old_quality = old_text_array[old_text_array.length - 1];
+          // ' 42%'
+          // console.log('checking oldSel thing' + oldSel.options[j]);
+          if (old_ssid.trim() == arr[i].ssid) {
+            // this option already exists in oldSel
+            // console.log(arr[i].ssid + ' exists already, updating text');
+            // update text of option
+            oldSel.options[j].text = new_option_text;
+            is_unique = false;
+            break;
+          }
+        }
+        if (is_unique) {
+          // console.log(opt.text + ' is unique/new');
+          oldSel.add(opt, null);
+        }
+      }
+      // re apply selected index
+      oldSel.selectedIndex = selected_index;
+      */
+    }
+  </script>
+</body>
+</html>
