@@ -1,0 +1,31 @@
+# Configuration for python coverage package
+[run]
+branch = True
+omit =
+    */tests/*,
+    .venv/*,
+    .idea/*,
+    setup*,
+    .eggs/*
+    .tox/*,
+    build/*,
+    dist/*,
+    version.py
+
+[report]
+include = src/*
+# Regexes for lines to exclude from consideration
+
+ignore_errors = True
+
+[html]
+directory = reports/coverage/html
+skip_empty = True
+
+[xml]
+output = reports/coverage/coverage.xml
+
+[json]
+output  = reports/coverage/coverage.json
+pretty_print = True
+show_contexts = True
