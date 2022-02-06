@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   including [`RTC`](simulation/src/machine/rtc.py) and
   [`Pin`](simulation/src/machine/pin.py)
 - [`TimeHelper`](simulation/src/time_helper/time_helper.py) class
+- Fake implementation of Micropython's
+  [neopixel](simulation/src/led_helper/neopixel.py)
+- Fake implementation of Micropython's
+  [network station and client](simulation/src/wifi_helper/network.py)
 
 <!-- Links -->
 [Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
