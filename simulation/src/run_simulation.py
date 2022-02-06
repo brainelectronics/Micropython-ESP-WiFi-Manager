@@ -10,7 +10,14 @@ def main():
     wm = WiFiManager(logger=None, quiet=False)
     result = wm.load_and_connect()
     print('Result of load_and_connect: {}'.format(result))
-    wm.start_config()
+
+    print('Starting configuration anyway in simulation')
+    result = False
+
+    if result is False:
+        wm.start_config()
+    else:
+        print('Successfully connected to a network :)')
 
 
 if __name__ == "__main__":
