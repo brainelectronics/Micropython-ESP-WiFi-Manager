@@ -39,7 +39,8 @@ class WiFiManager(object):
             GenericHelper.set_level(logger, 'debug')
         self.logger = logger
         self.logger.disabled = quiet
-        self._config_file = '../../wifi-secure.json'
+        self._config_file = (Path(__file__).parent / '..' / '..').resolve() / 'wifi-secure.json'
+        print('Config file at: {}'.format(self._config_file))
 
         flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
         template_folder = flask_root_folder / 'templates'
@@ -89,7 +90,7 @@ class WiFiManager(object):
         if PathHelper.exists(path=self._config_file):
             self.logger.debug('Encrypted wifi config file exists')
             loaded_cfg = self._load_wifi_config_data(path=self._config_file,
-                                                    encrypted=True)
+                                                     encrypted=True)
 
             private_cfg = None
             ssids = list()
@@ -514,21 +515,9 @@ class WiFiManager(object):
             self.logger.info('Raw network config: {}'.format(network_cfg))
 
             # save data in encrypted mode
-            #
-            #
-            # ENABLE THIS AGAIN
-            #
-            #
-            """
             self.extend_wifi_config_data(data=network_cfg,
                                          path=self._config_file,
                                          encrypted=True)
-            """
-            #
-            #
-            # ENABLE THIS AGAIN
-            #
-            #
             self.logger.info('Saving of network config to {} done'.
                              format(self._config_file))
         else:
