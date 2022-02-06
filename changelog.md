@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fake implementation of Micropython's [machine](simulation/src/machine)
   including [`RTC`](simulation/src/machine/rtc.py) and
   [`Pin`](simulation/src/machine/pin.py)
+- [`TimeHelper`](simulation/src/time_helper/time_helper.py) class
 
 <!-- Links -->
 [Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
