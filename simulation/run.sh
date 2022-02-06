@@ -10,4 +10,4 @@
 #=============================================================================
 
 cd src
-python run_simulation
+python run_simulation.py
