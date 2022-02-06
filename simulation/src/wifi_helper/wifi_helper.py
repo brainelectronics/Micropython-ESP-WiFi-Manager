@@ -5,12 +5,12 @@
 
 # import ubinascii
 import json
-# import network
+from machine import machine
 from . import network
 import time
 from collections import namedtuple
 
-# from .time_helper import TimeHelper
+from time_helper import TimeHelper
 
 # not natively supported on micropython, see lib/typing.py
 from typing import (List, NamedTuple, Union)
@@ -52,8 +52,37 @@ class WifiHelper(object):
         """
         is_successfull = False
 
-        # noting implemented here
-        is_successfull = True
+        print('Connect to network "{}" with password "{}"'.
+              format(ssid, '*' * 8))
+
+        # WiFi connection remains after a soft reset
+        if machine.reset_cause() == machine.SOFT_RESET:
+            print('Soft reset, checking existing WiFi connection')
+            if station.isconnected():
+                print('System already connected')
+                is_successfull = True
+                return is_successfull
+
+        try:
+            station.disconnect()
+            time.sleep(250 / 1000)
+            station.connect(ssid, password)
+        except Exception as e:
+            print('Failed to connect due to: {}'.format(e))
+            return is_successfull
+
+        # get current system timestamp in seconds since 01/01/2000
+        now = time.time()
+
+        # wait for connection no longer than the specified timeout
+        while (time.time() < (now + timeout)):
+            if station.isconnected():
+                is_successfull = True
+                return is_successfull
+            else:
+                pass
+
+            time.sleep(100 / 1000)
 
         return is_successfull
 
@@ -82,9 +111,83 @@ class WifiHelper(object):
         """
         is_connected = False
 
-        # noting implemented here
-        is_connected = True
+        # configure the WiFi as station mode (client)
+        station = network.WLAN(network.STA_IF)
 
+        # activate WiFi if not yet enabled
+        if not station.active():
+            station.active(True)
+
+        if station.isconnected():
+            current_network = station.config('essid')
+            print('Already connected to "{}"'.format(current_network))
+            if reconnect:
+                station.disconnect()
+                print('Disconnected from "{}"'.format(current_network))
+            else:
+                is_connected = True
+
+                th = TimeHelper()
+                th.sync_time()
+                print(station.ifconfig())
+
+                return is_connected
+
+        # get current system timestamp in seconds since 01/01/2000
+        now = time.time()
+
+        if ((type(ssid) is str) and (type(password) is str)):
+            # user provided string of single network to connect to
+            print('Connect by single network and password')
+
+            is_connected = WifiHelper._do_connect(station=station,
+                                                  ssid=ssid,
+                                                  password=password,
+                                                  timeout=timeout)
+            print('Connected to {}: {}'.format(ssid, is_connected))
+        elif ((type(ssid) is list) and
+              (type(password) is list)):
+            # user provided list of networks to connect to
+            print('Connect by list of networks and passwords')
+
+            for idx, s in enumerate(ssid):
+                is_connected = WifiHelper._do_connect(station=station,
+                                                      ssid=s,
+                                                      password=password[idx],
+                                                      timeout=timeout)
+                print('Connected to {}: {}'.format(s, is_connected))
+                if is_connected:
+                    break
+        elif ((networks is not None) and
+              (type(networks) is dict)):
+            # user provided dict of networks and passwords
+            print('Connect by dict of networks and passwords')
+
+            for ssid, password in networks.items():
+                is_connected = WifiHelper._do_connect(station=station,
+                                                      ssid=ssid,
+                                                      password=password,
+                                                      timeout=timeout)
+                print('Connected to {}: {}'.format(ssid, is_connected))
+                if is_connected:
+                    break
+        else:
+            print('SSID and/or password neither list nor string')
+
+        print('Stopped trying to connect to network after {} seconds'.
+              format(time.time() - now))
+
+        if is_connected:
+            print('Connection successful')
+            th = TimeHelper()
+            th.sync_time()
+        else:
+            print('Connection timeout of failed to connect')
+            print('Please check configured SSID and password')
+
+        print(station.ifconfig())
+
+        # return True if connection has been established
         return is_connected
 
     @property
@@ -131,7 +234,52 @@ class WifiHelper(object):
         """
         is_successfull = True
 
-        # noting implemented here
+        # configure the WiFi as accesspoint mode (server)
+        accesspoint = network.WLAN(network.AP_IF)
+
+        # activate accesspoint if not yet enabled
+        if not accesspoint.active():
+            accesspoint.active(True)
+
+        # check for open AccessPoint configuration
+        if len(password) > 7:
+            # WPA and WPA2 passwords can range from 8 to 63 characters
+            _authmode = network.AUTH_WPA_WPA2_PSK
+        else:
+            # in case a to short/long password has been given, set it to empty
+            _authmode = network.AUTH_OPEN
+            if len(password):
+                print('Invalid WPA/WPA2 password')
+                password = ''
+
+        print('Create AccessPoint "{}" with password "{}"'.
+              format(ssid, password))
+
+        accesspoint.config(essid=ssid,
+                           authmode=_authmode,
+                           password=password,
+                           channel=channel)
+
+        # get current system timestamp in seconds since 01/01/2000
+        now = time.time()
+
+        # wait for success no longer than the specified timeout
+        while (time.time() < (now + timeout)):
+            if accesspoint.active():
+                is_successfull = True
+                break
+            else:
+                pass
+
+        print('Stopped trying to setup AccessPoint after {} seconds'.
+              format(time.time() - now))
+
+        if is_successfull:
+            print('AccessPoint setup successful')
+        else:
+            print('Connection timeout, failed to setup AccessPoint')
+
+        print(accesspoint.ifconfig())
 
         return is_successfull
 
@@ -198,7 +346,6 @@ class WifiHelper(object):
                     pass
             if 'bssid' in net:
                 try:
-                    # net['bssid'] = ubinascii.hexlify(net['bssid'])
                     net['bssid'] = net['bssid']
                 except Exception:
                     pass
