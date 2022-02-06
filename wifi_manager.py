@@ -31,6 +31,9 @@ from helpers.led_helper import Neopixel     # Led
 from helpers.path_helper import PathHelper
 from helpers.wifi_helper import WifiHelper
 
+# not natively supported on micropython, see lib/typing.py
+from typing import List, Union
+
 
 class WiFiManager(object):
     """docstring for WiFiManager"""
@@ -51,7 +54,7 @@ class WiFiManager(object):
 
         self.event_sinks = set()
 
-        self.add_app_routes()
+        self._add_app_routes()
 
         # other setup and init here
         # AES key shall be 16 or 32 bytes
@@ -85,7 +88,7 @@ class WiFiManager(object):
         # check wifi config file existance
         if PathHelper.exists(path=self._config_file):
             self.logger.debug('Encrypted wifi config file exists')
-            loaded_cfg = self.load_wifi_config_data(path=self._config_file,
+            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
                                                     encrypted=True)
 
             private_cfg = None
@@ -115,6 +118,7 @@ class WiFiManager(object):
                 self._configured_networks = ssids
 
             # self._configured_networks = list(ssids).copy()
+            # self.logger.debug('All SSIDs: {}'.format(ssids))
             self.logger.debug('Config content: {}'.format(loaded_cfg))
             self.logger.debug('Private config content: {}'.format(private_cfg))
             self.logger.debug('Configured networks: {}'.
@@ -126,6 +130,8 @@ class WiFiManager(object):
                                         timeout=5,
                                         reconnect=False)
             self.logger.debug('Result of connection: {}'.format(result))
+        else:
+            self.logger.debug('WiFi config file does not (yet) exist')
 
         return result
 
@@ -143,7 +149,7 @@ class WiFiManager(object):
         # finally
         self.run(host=ifconfig.ip, port=80, debug=True)
 
-    def add_app_routes(self) -> None:
+    def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
 
         # self.app.add_url_rule(url='/', func=self.index)
@@ -169,7 +175,7 @@ class WiFiManager(object):
 
         self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'), func=self.styles)
 
-    def encrypt_data(self, data: Union[str, list, dict]) -> bytes:
+    def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
         Encrypt data with encryption key
 
@@ -192,12 +198,12 @@ class WiFiManager(object):
 
         return encrypted_data
 
-    def decrypt_data(self, data: str) -> str:
+    def _decrypt_data(self, data: bytes) -> str:
         """
         Decrypt data with decryption key
 
         :param      data:  The data
-        :type       data:  str
+        :type       data:  bytes
 
         :returns:   Decrypted data
         :rtype:     str
@@ -213,14 +219,14 @@ class WiFiManager(object):
         return decrypted_data_str
 
     def extend_wifi_config_data(self,
-                                data: Union[dict, list],
+                                data: Union[dict, List[dict]],
                                 path: str,
                                 encrypted: bool = False) -> None:
         """
         Extend WiFi configuration data of file.
 
         :param      data:       The data
-        :type       data:       Union[dict, list]
+        :type       data:       Union[dict, List[dict]]
         :param      path:       The full path to the file
         :type       path:       str
         :param      encrypted:  Flag to save data encrypted
@@ -228,15 +234,21 @@ class WiFiManager(object):
         """
         # in case the file already exists, extend its data content
         if PathHelper.exists(path=path):
-            existing_data = self.load_wifi_config_data(path=path,
-                                                       encrypted=encrypted)
+            existing_data = self._load_wifi_config_data(path=path,
+                                                        encrypted=encrypted)
             self.logger.debug('Existing WiFi config data: {}'.
                               format(existing_data))
             if isinstance(existing_data, dict):
-                data = [existing_data, data]
+                if isinstance(data, dict):
+                    data = [existing_data, data]
+                elif isinstance(data, list):
+                    data = [existing_data] + data
             elif isinstance(existing_data, list):
-                existing_data.append(data)
-                data = existing_data
+                if isinstance(data, dict):
+                    existing_data.append(data)
+                    data = existing_data
+                elif isinstance(data, list):
+                    data = existing_data + data
             else:
                 # unknown content, overwrite it
                 pass
@@ -256,7 +268,7 @@ class WiFiManager(object):
 
         if encrypted:
             # create bytes array of the dict and encrypt it
-            encrypted_data = self.encrypt_data(data=data)
+            encrypted_data = self._encrypt_data(data=data)
 
             # save data to file as binary as it contains encrypted data
             GenericHelper.save_file(data=encrypted_data,
@@ -271,9 +283,9 @@ class WiFiManager(object):
                                     mode='w')
             self.logger.debug('Saved data as json: {}'.format(data))
 
-    def load_wifi_config_data(self,
-                              path: str,
-                              encrypted: bool = False) -> dict:
+    def _load_wifi_config_data(self,
+                               path: str,
+                               encrypted: bool = False) -> Union[dict, List[dict]]:
         """
         Load WiFi configuration data from file.
 
@@ -283,7 +295,7 @@ class WiFiManager(object):
         :type       encrypted:  bool, optional
 
         :returns:   The loaded data
-        :rtype:     dict
+        :rtype:     Union[dict, List[dict]]
         """
         data = dict()
 
@@ -294,7 +306,7 @@ class WiFiManager(object):
                               format(encrypted_read_data))
 
             # decrypt read data
-            decrypted_data_str = self.decrypt_data(data=encrypted_read_data)
+            decrypted_data_str = self._decrypt_data(data=encrypted_read_data)
             self.logger.debug('Decrypted data str: {}'.
                               format(decrypted_data_str))
 
@@ -424,8 +436,9 @@ class WiFiManager(object):
         gc.collect()
         free = gc.mem_free()
         self.logger.debug('Free memory: {}'.format(free))
-        self.logger.info('Requested latest scan result')
-        return self._scan_net_msg.value()
+        latest_scan_result = self._scan_net_msg.value()
+        self.logger.info('Requested latest scan result: {}'.format(latest_scan_result))
+        return latest_scan_result
 
     # -------------------------------------------------------------------------
     # Webserver functions
@@ -571,8 +584,8 @@ class WiFiManager(object):
                     self.logger.debug('Removed network file')
                 return
 
-            loaded_cfg = self.load_wifi_config_data(path=self._config_file,
-                                                    encrypted=True)
+            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
+                                                     encrypted=True)
             self.logger.debug('Existing config content: {}'.format(loaded_cfg))
 
             try:
@@ -602,7 +615,7 @@ class WiFiManager(object):
                     self._configured_networks = ssids.copy()
 
                     # create bytes array of the dict and encrypt it
-                    encrypted_data = self.encrypt_data(data=loaded_cfg)
+                    encrypted_data = self._encrypt_data(data=loaded_cfg)
 
                     # save to file as binary
                     GenericHelper.save_file(data=encrypted_data,
