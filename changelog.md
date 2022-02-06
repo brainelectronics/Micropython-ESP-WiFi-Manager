@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Simulation
 - [`Simulation README`](simulation/README.md) file
-- [`.coverage`](simulation/.coverage) and [`.flake8`](simulation/.flake8) file
+- [`.coverage`](simulation/.coveragerc) and [`.flake8`](simulation/.flake8) file
 - [`requirements.txt`](simulation/requirements.txt) file
 - Empty [`LICENSE.txt`](simulation/LICENSE.txt) file
 - Setup [cfg](simulation/setup.cfg) and [py](simulation/setup.py) files
@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [`WiFiManager`](simulation/src/wifi_manager/wifi_manager.py) files
 - main [simulation file](simulation/src/run_simulation.py)
 - [Simple bash script](simulation/run.sh) to start simulation
+- Fake implementation of Micropython's [machine](simulation/src/machine)
+  including [`RTC`](simulation/src/machine/rtc.py) and
+  [`Pin`](simulation/src/machine/pin.py)
 
 <!-- Links -->
 [Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
