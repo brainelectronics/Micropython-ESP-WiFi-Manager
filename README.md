@@ -8,11 +8,11 @@ Simple Flask style Micropython Server running on an ESP32
 
 ## Setup
 
-The [esptool](https://github.com/espressif/esptool) is required to flash the
-micropython firmware onto the device.
+The [esptool][ref-esptool] is required to flash the micropython firmware onto
+the device.
 
 For interaction with the filesystem of the device the
-[Remote MicroPython shell](https://github.com/dhylands/rshell) can be used.
+[Remote MicroPython shell][ref-remote-upy-shell] can be used.
 
 ### Installation
 
@@ -37,9 +37,9 @@ rshell --help
 
 ### Flash firmware
 
-To flash the [micropython firmware](https://micropython.org/download/) as
-described on the micropython firmware download page, use the `esptool.py` to
-erase the flash before flashing the firmware.
+To flash the [micropython firmware][ref-upy-firmware-download] as described on
+the micropython firmware download page, use the `esptool.py` to erase the
+flash before flashing the firmware.
 
 ```bash
 esptool.py --chip esp32 --port /dev/tty.SLAB_USBtoUART erase_flash
@@ -115,6 +115,7 @@ upip.install('utemplate')
 upip.install('micropython-ulogging')
 ```
 
+<!--
 ## Templates
 
 If a template `.tpl` is updated on the device, the old and outdated `_tpl.py`
@@ -148,3 +149,9 @@ Time: '"""
 </html>
 """
 ```
+-->
+
+<!-- Links -->
+[ref-esptool]: https://github.com/espressif/esptool
+[ref-remote-upy-shell]: https://github.com/dhylands/rshell
+[ref-upy-firmware-download]: https://micropython.org/download/

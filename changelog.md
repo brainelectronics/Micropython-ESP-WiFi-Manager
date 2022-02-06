@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [neopixel](simulation/src/led_helper/neopixel.py)
 - Fake implementation of Micropython's
   [network station and client](simulation/src/wifi_helper/network.py)
+- Bash script to prepare all folders for a unittest coverage report
+- Unittests for all modules and fakes
 
 <!-- Links -->
 [Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
