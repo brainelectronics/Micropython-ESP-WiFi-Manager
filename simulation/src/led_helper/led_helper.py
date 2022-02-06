@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-"""
-handle LED operations on ESP32 Pico D4 board
-"""
+"""Mock LED operations of a Micropython board"""
+
 from . import neopixel
-# from machine import Pin
+from machine import Pin
 import _thread
 import time
 
@@ -25,7 +24,7 @@ class Neopixel(object):
         :param      neopixels:      Number of Neopixel LEDs
         :type       neopixels:      int, optional
         """
-        # neopixel_pin = Pin(neopixel_pin, Pin.OUT)
+        neopixel_pin = Pin(neopixel_pin, Pin.OUT)
         self._neopixel_amount = neopixels
         self.pixel = neopixel.NeoPixel(pin=neopixel_pin, n=neopixels)
 

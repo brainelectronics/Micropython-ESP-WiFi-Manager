@@ -2,3 +2,4 @@
 # -*- coding: UTF-8 -*-
 
 from .led_helper import Neopixel
+from .neopixel import NeoPixel
