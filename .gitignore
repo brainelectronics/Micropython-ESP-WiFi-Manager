@@ -5,6 +5,7 @@
 # project specific files
 simulation/wifi-secure.json
 .idea
+simulation/reports/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
