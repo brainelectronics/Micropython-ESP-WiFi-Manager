@@ -432,46 +432,16 @@ class WiFiManager(object):
                          format(latest_scan_result))
         return latest_scan_result
 
-    # -------------------------------------------------------------------------
-    # Webserver functions
-
-    # @app.route('/landing_page')
-    def landing_page(self):
-        # return render_template('wifi_select_loader.tpl.html',
-        return render_template('index.tpl.html')
-
-    # @app.route('/scan_result')
-    def scan_result(self):
-        """Provide latest found networks as JSON"""
-        return jsonify(self.latest_scan)
-
-    # @app.route('/select')
-    def wifi_selection(self):
-        """
-        Provide webpage to select WiFi network from list of available networks
-
-        Scanning just in time of accessing the page would block all processes
-        for approx. 2.5 sec.
-        Using the result provided by the scan thread via a message takes only
-        0.02 sec to complete
-        """
-        available_nets = self.latest_scan
-        content = self._render_network_inputs(available_nets=available_nets)
-        return render_template('select.tpl.html', content=content)
-
-    # @app.route('/render_network_inputs')
-    def render_network_inputs(self) -> str:
-        """Return rendered network inputs content to webpage"""
-        available_nets = self.latest_scan
-        content = self._render_network_inputs(available_nets=available_nets)
-        return content
-
-    def _render_network_inputs(self, available_nets: dict) -> str:
+    def _render_network_inputs(self,
+                               available_nets: dict,
+                               selected_bssid: str) -> str:
         """
         Render HTML list of selectable networks
 
-        :param      available_nets:  The available nets
+        :param      available_nets:  All available nets
         :type       available_nets:  dict
+        :param      selected_bssid:  Currently selected network on the webpage
+        :type       selected_bssid:  str
 
         :returns:   Sub content of WiFi selection page
         :rtype:     str
@@ -480,10 +450,8 @@ class WiFiManager(object):
         if len(available_nets):
             for ele in available_nets:
                 selected = ''
-                if ele['bssid'] == self._selected_network_bssid:
+                if ele['bssid'] == selected_bssid:
                     selected = "checked"
-                    self.logger.info('Mark BSSID {} as selected'.
-                                     format(ele['bssid']))
                 content += """
                 <input class="list-group-item-check" type="radio" name="bssid" id="{bssid}" value="{bssid}" onclick="remember_selected_element(this)" {state}>
                 <label class="list-group-item py-3" for="{bssid}">
@@ -506,40 +474,9 @@ class WiFiManager(object):
 
         return content
 
-    # @app.route('/configure')
-    def wifi_configs(self):
-        """Provide webpage with table of configured networks"""
-        configured_nets = self.configured_networks
-        self.logger.debug('Existing config content: {}'.
-                          format(configured_nets))
-
-        if isinstance(configured_nets, str):
-            configured_nets = [configured_nets]
-
-        # disable submit button by default
-        return render_template('remove.tpl.html',
-                               wifi_nets=configured_nets,
-                               button_mode='disabled')
-
-    # @app.route('/save_wifi_config', methods=['POST', 'GET'])
-    def save_wifi_config(self):
-        form_data = dict(request.form)
-
-        self.logger.info('WiFi user input content: {}'.format(form_data))
-        # result if a network of the list has been selected
-        # {'bssid': 'a0f3c1fbfc3c', 'ssid': '', 'password': 'sdsfv'}
-        # result if a custom network is given
-        # {'ssid': 'myCustom Net', 'password': 'asdf1234'}
-        # result if nothing is selected
-        # {'ssid': '', 'password': ''}
-
-        self._save_wifi_config(form_data=form_data)
-
-        return redirect(url_for('landing_page'))
-
     def _save_wifi_config(self, form_data: dict) -> None:
         """
-        Save a new WiFi configuration.
+        Save a new WiFi configuration to the WiFi configuration file.
 
         :param      form_data:  The form data
         :type       form_data:  dict
@@ -611,21 +548,9 @@ class WiFiManager(object):
         else:
             self.logger.info('No valid SSID found, will not save this net')
 
-    # @app.route('/remove_wifi_config', methods=['POST', 'GET'])
-    def remove_wifi_config(self):
-        """Remove a configured WiFi network"""
-        form_data = dict(request.form)
-
-        self.logger.info('Remove networks: {}'.format(form_data))
-        # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
-
-        self._remove_wifi_config(form_data=form_data)
-
-        return redirect(url_for('landing_page'))
-
     def _remove_wifi_config(self, form_data: dict) -> None:
         """
-        Remove a WiFi network from the configuration file.
+        Remove a WiFi network from the WiFi configuration file.
 
         :param      form_data:  The form data
         :type       form_data:  dict
@@ -653,6 +578,85 @@ class WiFiManager(object):
                                     mode='wb')
             self.logger.debug('Saved encrypted data as json: {}'.
                               format(encrypted_data))
+
+    # -------------------------------------------------------------------------
+    # Webserver functions
+
+    # @app.route('/landing_page')
+    def landing_page(self):
+        # return render_template('wifi_select_loader.tpl.html',
+        return render_template('index.tpl.html')
+
+    # @app.route('/scan_result')
+    def scan_result(self):
+        """Provide latest found networks as JSON"""
+        return jsonify(self.latest_scan)
+
+    # @app.route('/select')
+    def wifi_selection(self):
+        """
+        Provide webpage to select WiFi network from list of available networks
+
+        Scanning just in time of accessing the page would block all processes
+        for approx. 2.5 sec.
+        Using the result provided by the scan thread via a message takes only
+        0.02 sec to complete
+        """
+        available_nets = self.latest_scan
+        content = self._render_network_inputs(available_nets=available_nets)
+        return render_template('select.tpl.html', content=content)
+
+    # @app.route('/render_network_inputs')
+    def render_network_inputs(self) -> str:
+        """Return rendered network inputs content to webpage"""
+        available_nets = self.latest_scan
+        selected_bssid = self._selected_network_bssid
+        content = self._render_network_inputs(available_nets=available_nets,
+                                              selected_bssid=selected_bssid)
+        return content
+
+    # @app.route('/configure')
+    def wifi_configs(self):
+        """Provide webpage with table of configured networks"""
+        configured_nets = self.configured_networks
+        self.logger.debug('Existing config content: {}'.
+                          format(configured_nets))
+
+        if isinstance(configured_nets, str):
+            configured_nets = [configured_nets]
+
+        # disable submit button by default
+        return render_template('remove.tpl.html',
+                               wifi_nets=configured_nets,
+                               button_mode='disabled')
+
+    # @app.route('/save_wifi_config', methods=['POST', 'GET'])
+    def save_wifi_config(self):
+        form_data = dict(request.form)
+
+        self.logger.info('WiFi user input content: {}'.format(form_data))
+        # result if a network of the list has been selected
+        # {'bssid': 'a0f3c1fbfc3c', 'ssid': '', 'password': 'sdsfv'}
+        # result if a custom network is given
+        # {'ssid': 'myCustom Net', 'password': 'asdf1234'}
+        # result if nothing is selected
+        # {'ssid': '', 'password': ''}
+
+        self._save_wifi_config(form_data=form_data)
+
+        return redirect(url_for('landing_page'))
+
+    # @app.route('/remove_wifi_config', methods=['POST', 'GET'])
+    def remove_wifi_config(self):
+        """Remove a configured WiFi network"""
+        form_data = dict(request.form)
+
+        self.logger.info('Remove networks: {}'.format(form_data))
+        # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
+
+        self._remove_wifi_config(form_data=form_data)
+
+        return redirect(url_for('landing_page'))
 
     def run(self,
             host: str = '0.0.0.0',
