@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-"""connect to specified network(s) or create an accesspoint"""
+"""
+WiFi Helper
+
+Connect to specified network(s) or create an accesspoint
+"""
 
 # import ubinascii
 import json

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-"""try to sync and set the internal clock (RTC) with NTP server time"""
+"""
+Time Helper
+
+Sync and set internal clock (RTC) with NTP server time
+"""
 
 from machine import RTC
 # import ntptime

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-"""Provide unavailable path functions in MicroPython"""
+"""
+Path Helper
+
+Provide unavailable path functions for Micropython boards
+"""
 
 # import os
 from pathlib import Path

@@ -14,7 +14,7 @@ import os
 import random
 import sys
 
-from typing import (Optional, Union)
+from typing import Optional, Union
 
 
 class GenericHelper(object):
