@@ -582,7 +582,11 @@ class WiFiManager(object):
                 if PathHelper.exists(path=self._config_file):
                     os.remove(self._config_file)
                     self.logger.debug('Removed network file')
-                return
+                    # redirect to '/'
+                    headers = {'Location': '/'}
+                    yield from picoweb.start_response(resp,
+                                                      status='303',
+                                                      headers=headers)
 
             loaded_cfg = self._load_wifi_config_data(path=self._config_file,
                                                      encrypted=True)
