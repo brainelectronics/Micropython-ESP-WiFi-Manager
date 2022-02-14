@@ -341,7 +341,8 @@ class WifiHelper(object):
                 try:
                     net['authmode'] = self.auth_modes[net['authmode']]
                 except KeyError:
-                    print('{} is unknown authmode'.format(net['authmode']))
+                    # print('{} is unknown authmode'.format(net['authmode']))
+                    pass
                 except Exception:
                     pass
             if 'bssid' in net:
