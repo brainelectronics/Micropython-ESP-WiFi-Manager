@@ -5,38 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Setup</title>
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/list-groups.css') }}" rel="stylesheet">
-  <!-- <link href="style.css" rel="stylesheet"> -->
 </head>
 <body style="margin:0;" class="text-center">
-  <div id="overlay" class="overlay">
-    <div id="loader" class="loader"></div>
-  </div>
-
   <div class="center" style="width:400px;">
-    <div style="display:none;" id="myDiv" class="animate-bottom">
-      <h4>Choose action</h4>
-      <div>
-        <a class="btn btn-primary btn-lg btn-block" href="/wifi_selection" role="button">Select WiFi network</a>
-      </div>
-      <div>
-        <a class="btn btn-primary btn-lg btn-block" href="/wifi_configs" role="button">Manage WiFi networks</a>
-      </div>
-      <br>
+    <div class="list-group">
+      <a href="/" class="list-group-item list-group-item-action active">This page</a>
+      <a href="/select" class="list-group-item list-group-item-action">Select WiFi network</a>
+      <a href="/configure" class="list-group-item list-group-item-action">Manage WiFi networks</a>
+      <a href="/scan_result" class="list-group-item list-group-item-action">Latest Scan result<a>
     </div>
   </div>
-  <script>
-    window.onload = function(e) {
-      setTimeout(showPage, 1000);
-    };
-    function showPage() {
-      document.getElementById("loader").style.display = "none";
-      document.getElementById("myDiv").style.display = "block";
-      //document.getElementById("rcorners3").style.display = "block";
-      document.getElementById("overlay").style.display = "none";
-    };
-  </script>
 </body>
 </html>
