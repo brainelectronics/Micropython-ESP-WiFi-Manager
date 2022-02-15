@@ -3,18 +3,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="description" content="Select WiFi network">
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Select WiFi</title>
-  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/list-groups.css') }}" rel="stylesheet">
+  <link href="static/css/bootstrap.min.css" rel="stylesheet">
+  <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+  <style type="text/css">
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-color:gray;color:#fff;opacity:1;transition:.5s;visibility:visible}
+    .overlay.hidden{opacity:0;visibility:hidden}
+    .loader{position:absolute;left:50%;top:50%;z-index:1;width:120px;height:120px;margin:-76px 0 0 -76px;border:16px solid #f3f3f3;border-radius:50%;border-top:16px solid #3498db;-webkit-animation:spin 2s linear infinite;animation:spin 2s linear infinite}
+    @-webkit-keyframes spin{0%{-webkit-transform:rotate(0)}100%{-webkit-transform:rotate(360deg)}
+    }@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  </style>
+  <style type="text/css">
+    .list-group{width:auto;max-width:460px;margin:4rem auto}
+    .form-check-input:checked+.form-checked-content{opacity:.5}
+    .form-check-input-placeholder{pointer-events:none;border-style:dashed}[contenteditable]:focus{outline:0}
+    .list-group-checkable{display:grid;gap:.5rem;border:0}
+    .list-group-checkable .list-group-item{cursor:pointer;border-radius:.5rem}
+    .list-group-item-check{position:absolute;clip:rect(0,0,0,0);pointer-events:none}
+    .list-group-item-check:hover+.list-group-item{background-color:var(--bs-light)}
+    .list-group-item-check:checked+.list-group-item{color:#fff;background-color:var(--bs-blue)}
+    .list-group-item-check:disabled+.list-group-item,.list-group-item-check[disabled]+.list-group-item{pointer-events:none;filter:none;opacity:.5}
+  </style>
+  <style type="text/css">
+    body {padding:50px 80px;}
+  </style>
 </head>
-<body style="margin:0;" class="text-center">
+<body>
   <div id="overlay" class="overlay">
     <div id="loader" class="loader"></div>
   </div>
 
   <div style="display:none;" id="myDiv" class="animate-bottom">
+    <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
     <h4>Select a WiFi network</h4>
     <div class="list-group list-group-checkable">
       <form action="save_wifi_config" method="post" id="save_wifi_config_form">
@@ -31,6 +53,7 @@
           </form>
         </div>
       </form>
+    </div>
     </div>
   </div>
 
