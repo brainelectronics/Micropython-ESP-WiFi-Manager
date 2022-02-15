@@ -21,7 +21,7 @@ from typing import List, Union
 from generic_helper import Message
 
 # pip installed packages
-from flask import Flask, render_template, url_for, redirect, request, jsonify
+from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
 
 # custom packages
 from generic_helper import GenericHelper
@@ -165,6 +165,14 @@ class WiFiManager(object):
                               view_func=self.remove_wifi_config,
                               methods=['POST', 'GET'])
         self.app.add_url_rule("/scan_result", view_func=self.scan_result)
+
+        self.app.add_url_rule(
+            "/static/css/bootstrap.min.css",
+            view_func=self.styles
+        )
+        # regex not supported in Flask
+        # self.app.add_url_rule(re.compile('^\/(.+\.css)$'),
+        #                       view_func=self.styles)
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
@@ -434,7 +442,7 @@ class WiFiManager(object):
 
     def _render_network_inputs(self,
                                available_nets: dict,
-                               selected_bssid: str) -> str:
+                               selected_bssid: str = '') -> str:
         """
         Render HTML list of selectable networks
 
@@ -584,7 +592,7 @@ class WiFiManager(object):
 
     # @app.route('/landing_page')
     def landing_page(self):
-        # return render_template('wifi_select_loader.tpl.html',
+        """Provide landing aka index page"""
         return render_template('index.tpl.html')
 
     # @app.route('/scan_result')
@@ -604,6 +612,13 @@ class WiFiManager(object):
         """
         available_nets = self.latest_scan
         content = self._render_network_inputs(available_nets=available_nets)
+
+        # do not stop scanning as page is updating scan results on the fly
+        # with XMLHTTP requests to @see scan_result
+        # stop scanning thread
+        # self.logger.info('Stopping scanning thread')
+        # self.scanning = False
+
         return render_template('select.tpl.html', content=content)
 
     # @app.route('/render_network_inputs')
@@ -657,6 +672,62 @@ class WiFiManager(object):
         self._remove_wifi_config(form_data=form_data)
 
         return redirect(url_for('landing_page'))
+
+    # @app.route(re.compile('^\/(.+\.css)$'))
+    def styles(self):
+        """
+        Send gzipped CSS content if supported by client.
+
+        Shows specifying headers as a flat binary string, more efficient if
+        such headers are static.
+        """
+        file_path = str(request.url_rule)
+        headers = b'Cache-Control: max-age=86400\r\n'
+
+        if 'gzip' in str(request.headers):
+            self.logger.debug('gzip accepted for CSS style file')
+            file_path += '.gz'
+            headers += b'Content-Encoding: gzip\r\n'
+
+        self.logger.debug('Accessed file {}'.format(file_path))
+        return self.sendfile(writer=request,
+                             fname=file_path,
+                             content_type='text/css',
+                             headers=headers)
+
+    def sendfile(self,
+                 fname: str,
+                 content_type: str,
+                 headers: str,
+                 writer=None):
+        """
+        Fake function to send file in same style as in PicoWeb on Micropython
+
+        :param      fname:         The filename
+        :type       fname:         str
+        :param      content_type:  The content type
+        :type       content_type:  str
+        :param      headers:       The headers
+        :type       headers:       str
+        :param      writer:        The writer
+        :type       writer:        Optional
+        """
+        flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
+        file_path = str(flask_root_folder) + str(fname)
+
+        self.logger.debug('Open file {}'.format(file_path))
+        with open(file_path, 'rb') as file:
+            content = file.read()
+
+        res = make_response(content)
+        res.headers["Content-Type"] = content_type
+        # res.headers['Content-Length'] = len(content)
+
+        for ele in headers.decode('ascii').splitlines():
+            key, value = ele.split(':')
+            res.headers[key] = value.lstrip()
+
+        return res
 
     def run(self,
             host: str = '0.0.0.0',
