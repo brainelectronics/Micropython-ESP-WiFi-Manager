@@ -64,11 +64,12 @@ class WiFiManager(object):
         self._enc_key = (uuid * amount).decode('ascii')[:required_len]
 
         self._configured_networks = list()
+        self._selected_network_bssid = ''
 
         # WiFi scan specific defines
         self._scan_lock = _thread.allocate_lock()
         self._scan_interval = 5000  # milliseconds
-        # Queue also works, but not in this case there is no need for a history
+        # Queue also works, but in this case there is no need for a history
         self._scan_net_msg = Message()
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
@@ -120,7 +121,8 @@ class WiFiManager(object):
             # self._configured_networks = list(ssids).copy()
             # self.logger.debug('All SSIDs: {}'.format(ssids))
             self.logger.debug('Config content: {}'.format(loaded_cfg))
-            self.logger.debug('Private config content: {}'.format(private_cfg))
+            self.logger.debug('Private config content: {}'.
+                              format(private_cfg))
             self.logger.debug('Configured networks: {}'.
                               format(self._configured_networks))
 
@@ -155,25 +157,20 @@ class WiFiManager(object):
         # self.app.add_url_rule(url='/', func=self.index)
         # @app.route('/index')
         # def index(self, req, resp): pass
-        # https://github.com/pfalcon/picoweb/blob/master/picoweb/__init__.py#L251
-
-        # for testing only
-        # self.app.add_url_rule(url='/', func=self.index)
-        # self.app.add_url_rule(url='/form', func=self.show_form)
-        # self.app.add_url_rule(url='/form_url', func=self.form_parse)
-        # self.app.add_url_rule(url='/unload', func=self.show_unload)
-        # self.app.add_url_rule(url='/unload_data', func=self.unload_data)
-
-        self.app.add_url_rule(url='/wifi_selection', func=self.wifi_selection)
-        self.app.add_url_rule(url='/wifi_configs', func=self.wifi_configs)
+        # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L251
+        self.app.add_url_rule(url="/", func=self.landing_page)
+        self.app.add_url_rule(url='/select', func=self.wifi_selection)
+        self.app.add_url_rule("/render_network_inputs",
+                              func=self.render_network_inputs)
+        self.app.add_url_rule(url='/configure', func=self.wifi_configs)
         self.app.add_url_rule(url='/save_wifi_config',
                               func=self.save_wifi_config)
         self.app.add_url_rule(url='/remove_wifi_config',
                               func=self.remove_wifi_config)
-
         self.app.add_url_rule(url='/scan_result', func=self.scan_result)
 
-        self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'), func=self.styles)
+        self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'),
+                              func=self.styles)
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
@@ -285,7 +282,8 @@ class WiFiManager(object):
 
     def _load_wifi_config_data(self,
                                path: str,
-                               encrypted: bool = False) -> Union[dict, List[dict]]:
+                               encrypted: bool = False) -> Union[dict,
+                                                                 List[dict]]:
         """
         Load WiFi configuration data from file.
 
@@ -301,7 +299,8 @@ class WiFiManager(object):
 
         if encrypted:
             # read file in binary as it contains encrypted data
-            encrypted_read_data = GenericHelper.load_file(path=path, mode='rb')
+            encrypted_read_data = GenericHelper.load_file(path=path,
+                                                          mode='rb')
             self.logger.debug('Read encrypted data: {}'.
                               format(encrypted_read_data))
 
@@ -383,8 +382,8 @@ class WiFiManager(object):
         """
         Set the WiFi scan interval in milliseconds.
 
-        Values below 1000ms are set to 1000ms.
-        One scan takes around 3 sec, which leads to maximum 15 scans per minute
+        Values below 1000 ms are set to 1000 ms.
+        One scan takes around 3 sec, which leads to maximum 15 scans per min
 
         :param      value:  Interval of WiFi scans in milliseconds
         :type       value:  int
@@ -437,88 +436,92 @@ class WiFiManager(object):
         free = gc.mem_free()
         self.logger.debug('Free memory: {}'.format(free))
         latest_scan_result = self._scan_net_msg.value()
-        self.logger.info('Requested latest scan result: {}'.format(latest_scan_result))
+        self.logger.info('Requested latest scan result: {}'.
+                         format(latest_scan_result))
         return latest_scan_result
 
-    # -------------------------------------------------------------------------
-    # Webserver functions
-
-    # @app.route("/scan_result")
-    def scan_result(self, req, resp) -> None:
-        """Provide latest found networks"""
-        yield from picoweb.start_response(writer=resp,
-                                          content_type="application/json")
-
-        encoded = json.dumps(self.latest_scan)
-        yield from resp.awrite(encoded)
-
-    # @app.route("/wifi_selection")
-    def wifi_selection(self, req, resp) -> None:
+    def _render_network_inputs(self,
+                               available_nets: dict,
+                               selected_bssid: str = '') -> str:
         """
-        Provide webpage to select WiFi network from list of available networks
+        Render HTML list of selectable networks
 
-        Scanning just in time of accessing the page would block all processes
-        for approx. 2.5sec.
-        Using the result provided by the scan thread via a message takes only
-        0.02sec to complete
+        :param      available_nets:  All available nets
+        :type       available_nets:  dict
+        :param      selected_bssid:  Currently selected network on the webpage
+        :type       selected_bssid:  str
+
+        :returns:   Sub content of WiFi selection page
+        :rtype:     str
         """
-        available_nets = self.latest_scan
-        self.logger.info('Available WiFi networks: {}'.format(available_nets))
+        content = ""
+        if len(available_nets):
+            for ele in available_nets:
+                selected = ''
+                if ele['bssid'].decode('ascii') == selected_bssid:
+                    selected = "checked"
+                content += """
+                <input class="list-group-item-check" type="radio" name="bssid" id="{bssid}" value="{bssid}" onclick="remember_selected_element(this)" {state}>
+                <label class="list-group-item py-3" for="{bssid}">
+                  {ssid}
+                  <span class="d-block small opacity-50">
+                    Signal quality {quality}&#37;, BSSID {bssid}
+                  </span>
+                </label>
+                """.format(bssid=ele['bssid'],
+                           state=selected,
+                           ssid=ele['ssid'],
+                           quality=ele['quality'])
+        else:
+            # as long as no networks are available show a spinner
+            content = """
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            """
 
-        # do not stop scanning as page is updating scan results on the fly with
-        # XMLHTTP requests to @see scan_result
-        # stop scanning thread
-        # self.logger.info('Stopping scanning thread')
-        # self.scanning = False
+        return content
 
-        yield from picoweb.start_response(resp)
+    def _save_wifi_config(self, form_data: dict) -> None:
+        """
+        Save a new WiFi configuration to the WiFi configuration file.
 
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='wifi_select_loader.tpl',
-                                            args=(req, available_nets, ))
-
-    # @app.route("/wifi_configs")
-    def wifi_configs(self, req, resp) -> None:
-        """Provide webpage with table of configured networks"""
-        configured_nets = self.configured_networks
-        self.logger.debug('Existing config content: {}'.
-                          format(configured_nets))
-        if isinstance(configured_nets, str):
-            configured_nets = [configured_nets]
-
-        yield from picoweb.start_response(resp)
-
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='wifi_configs.tpl',
-                                            args=(req, configured_nets, ))
-
-    # @app.route("/save_wifi_config")
-    def save_wifi_config(self, req, resp) -> None:
-        """Process saving the specified WiFi network to the WiFi config file"""
-        if req.method == 'POST':
-            yield from req.read_form_data()
-        else:  # GET, apparently
-            # Note: parse_qs() is not a coroutine, but a normal function.
-            # But you can call it using yield from too.
-            req.parse_qs()
-
-        form_data = req.form
-
-        # Whether form data comes from GET or POST request, once parsed,
-        # it's available as req.form dictionary
-        self.logger.info('WiFi user input content: {}'.format(form_data))
-        # {'ssid': '', 'wifi_network': 'a0f3c1fbfc3c', 'password': 'qwertz'}
-
+        :param      form_data:  The form data
+        :type       form_data:  dict
+        """
         network_cfg = dict()
         available_nets = self.latest_scan
         self.logger.info('Available nets: {}'.format(available_nets))
-        # [{'ssid': b'TP-LINK_FBFC3C', 'RSSI': -53, 'bssid': b'a0f3c1fbfc3c', 'authmode': 'WPA/WPA2-PSK', 'quality': 94, 'channel': 1, 'hidden': False}, {'ssid': b'FRITZ!Box 7490', 'RSSI': -77, 'bssid': b'3810d517eb39', 'authmode': 'WPA2-PSK', 'quality': 46, 'channel': 1, 'hidden': False}]
+        # [
+        #   {
+        #       'ssid': 'TP-LINK_FBFC3C',
+        #       'RSSI': -21,
+        #       'bssid': 'a0f3c1fbfc3c',
+        #       'authmode': 'WPA/WPA2-PSK',
+        #       'quality': 9,
+        #       'channel': 1,
+        #       'hidden': False
+        #   },
+        #   {
+        #       'ssid': 'FRITZ!Box 7490',
+        #       'RSSI': -17,
+        #       'bssid': '3810d517eb39',
+        #       'authmode': 'WPA2-PSK',
+        #       'quality': 27,
+        #       'channel': 11,
+        #       'hidden': False
+        #   }
+        # ]
 
         # find SSID of network based on given bssid value
         if form_data['ssid'] != '':
             network_cfg['ssid'] = form_data['ssid']
         else:
-            selected_bssid = form_data['wifi_network']
+            if 'bssid' not in form_data:
+                return
+
+            # selected_bssid = form_data['wifi_network']
+            selected_bssid = form_data['bssid']
             for ele in available_nets:
                 if (isinstance(selected_bssid, str) and
                    selected_bssid.startswith("b'")):
@@ -528,6 +531,7 @@ class WiFiManager(object):
                     this_bssid = str(ele['bssid'])
                 else:
                     this_bssid = ele['bssid'].decode('ascii')
+
                 if this_bssid == selected_bssid:
                     # use string, json loading will fail otherwise later
                     network_cfg['ssid'] = ele['ssid'].decode('ascii')
@@ -552,6 +556,127 @@ class WiFiManager(object):
         else:
             self.logger.info('No valid SSID found, will not save this net')
 
+    def _remove_wifi_config(self, form_data: dict) -> None:
+        """
+        Remove a WiFi network from the WiFi configuration file.
+
+        :param      form_data:  The form data
+        :type       form_data:  dict
+        """
+        if len(form_data):
+            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
+                                                     encrypted=True)
+
+            updated_cfg = list()
+            updated_ssids = list()
+
+            for net in loaded_cfg:
+                if net['ssid'] not in form_data:
+                    updated_cfg.append(net)
+                    updated_ssids.append(net['ssid'])
+
+            self._configured_networks = updated_ssids.copy()
+
+            # create bytes array of the dict and encrypt it
+            encrypted_data = self._encrypt_data(data=updated_cfg)
+
+            # save to file as binary
+            GenericHelper.save_file(data=encrypted_data,
+                                    path=self._config_file,
+                                    mode='wb')
+            self.logger.debug('Saved encrypted data as json: {}'.
+                              format(encrypted_data))
+
+    # -------------------------------------------------------------------------
+    # Webserver functions
+
+    # @app.route('/landing_page')
+    def landing_page(self, req, resp) -> None:
+        yield from picoweb.start_response(resp)
+        yield from self.app.render_template(writer=resp,
+                                            tmpl_name='index.tpl',
+                                            args=(req, ))
+
+    # @app.route("/scan_result")
+    def scan_result(self, req, resp) -> None:
+        """Provide latest found networks as JSON"""
+        yield from picoweb.start_response(writer=resp,
+                                          content_type="application/json")
+
+        encoded = json.dumps(self.latest_scan)
+        yield from resp.awrite(encoded)
+        # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L39
+        # yield from resp.jsonify(self.latest_scan)
+
+    # @app.route("/select")
+    def wifi_selection(self, req, resp) -> None:
+        """
+        Provide webpage to select WiFi network from list of available networks
+
+        Scanning just in time of accessing the page would block all processes
+        for approx. 2.5sec.
+        Using the result provided by the scan thread via a message takes only
+        0.02sec to complete
+        """
+        available_nets = self.latest_scan
+        content = self._render_network_inputs(available_nets=available_nets)
+
+        # do not stop scanning as page is updating scan results on the fly
+        # with XMLHTTP requests to @see scan_result
+        # stop scanning thread
+        # self.logger.info('Stopping scanning thread')
+        # self.scanning = False
+
+        yield from picoweb.start_response(resp)
+        yield from self.app.render_template(writer=resp,
+                                            tmpl_name='select.tpl',
+                                            args=(req, available_nets, ))
+
+    # @app.route("/render_network_inputs")
+    def render_network_inputs(self, req, resp) -> str:
+        """Return rendered network inputs content to webpage"""
+        available_nets = self.latest_scan
+        selected_bssid = self._selected_network_bssid
+        content = self._render_network_inputs(available_nets=available_nets,
+                                              selected_bssid=selected_bssid)
+
+        yield from picoweb.start_response(resp)
+        yield from resp.awrite(content)
+
+    # @app.route("/configure")
+    def wifi_configs(self, req, resp) -> None:
+        """Provide webpage with table of configured networks"""
+        configured_nets = self.configured_networks
+        self.logger.debug('Existing config content: {}'.
+                          format(configured_nets))
+
+        if isinstance(configured_nets, str):
+            configured_nets = [configured_nets]
+
+        yield from picoweb.start_response(resp)
+        yield from self.app.render_template(writer=resp,
+                                            tmpl_name='remove.tpl',
+                                            args=(req, configured_nets, 'disabled'))
+
+    # @app.route("/save_wifi_config")
+    def save_wifi_config(self, req, resp) -> None:
+        """Process saving the specified WiFi network to the WiFi config file"""
+        if req.method == 'POST':
+            yield from req.read_form_data()
+        else:  # GET, apparently
+            # Note: parse_qs() is not a coroutine, but a normal function.
+            # But you can call it using yield from too.
+            req.parse_qs()
+
+        form_data = req.form
+
+        # Whether form data comes from GET or POST request, once parsed,
+        # it's available as req.form dictionary
+        self.logger.info('WiFi user input content: {}'.format(form_data))
+        # {'ssid': '', 'wifi_network': 'a0f3c1fbfc3c', 'password': 'qwertz'}
+
+        self._save_wifi_config(form_data=form_data)
+
         # redirect to '/'
         headers = {'Location': '/'}
         yield from picoweb.start_response(resp, status='303', headers=headers)
@@ -569,69 +694,14 @@ class WiFiManager(object):
         # Whether form data comes from GET or POST request, once parsed,
         # it's available as req.form dictionary
         form_data = req.form
-        self.logger.info('Received data: {}'.format(form_data))
+        self.logger.info('Remove networks: {}'.format(form_data))
+        # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
 
-        if all(ele in form_data for ele in ['name', 'index']):
-            network_name = form_data['name']
-            network_index = int(form_data['index']) - 1  # th is also counted
+        self._remove_wifi_config(form_data=form_data)
 
-            self.logger.debug('Remove network "{}" at index {}'.
-                              format(form_data['name'], form_data['index']))
-
-            if network_name == "all" and network_index == -1:
-                if PathHelper.exists(path=self._config_file):
-                    os.remove(self._config_file)
-                    self.logger.debug('Removed network file')
-                    # redirect to '/'
-                    headers = {'Location': '/'}
-                    yield from picoweb.start_response(resp,
-                                                      status='303',
-                                                      headers=headers)
-
-            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
-                                                     encrypted=True)
-            self.logger.debug('Existing config content: {}'.format(loaded_cfg))
-
-            try:
-                network_cfg = loaded_cfg[network_index]
-                if network_cfg['ssid'] == network_name:
-                    self.logger.debug('Found specified network in network cfg')
-
-                    ssids = list()
-                    if isinstance(loaded_cfg, list):
-                        # remove element from list
-                        del loaded_cfg[network_index]
-
-                        self.logger.debug('Updated data: {}'.
-                                          format(loaded_cfg))
-
-                        # list of dicts
-                        for net in loaded_cfg:
-                            if 'ssid' in net:
-                                ssids.append(net['ssid'])
-                    elif isinstance(loaded_cfg, dict):
-                        pass
-                        # do not do anything, updated data will be empty list
-
-                        # if 'ssid' in loaded_cfg:
-                        #     ssids = loaded_cfg['ssid']
-
-                    self._configured_networks = ssids.copy()
-
-                    # create bytes array of the dict and encrypt it
-                    encrypted_data = self._encrypt_data(data=loaded_cfg)
-
-                    # save to file as binary
-                    GenericHelper.save_file(data=encrypted_data,
-                                            path=self._config_file,
-                                            mode='wb')
-                    self.logger.debug('Saved encrypted data as json: {}'.
-                                      format(encrypted_data))
-            except IndexError as e:
-                self.logger.debug('Specified network at index {} not found'.
-                                  format(network_index))
-            except Exception as e:
-                self.logger.debug('Catched: {}'.format(e))
+        # redirect to '/'
+        headers = {'Location': '/'}
+        yield from picoweb.start_response(resp, status='303', headers=headers)
 
     # @app.route(re.compile('^\/(.+\.css)$'))
     def styles(self, req, resp) -> None:
@@ -645,93 +715,14 @@ class WiFiManager(object):
 
         if b'gzip' in req.headers.get(b'Accept-Encoding', b''):
             self.logger.debug('gzip accepted for CSS style file')
-        """
             file_path += '.gz'
             headers += b'Content-Encoding: gzip\r\n'
-        """
 
+        self.logger.debug('Accessed file {}'.format('static/' + file_path))
         yield from self.app.sendfile(writer=resp,
                                      fname='static/' + file_path,
                                      content_type='text/css',
                                      headers=headers)
-
-    """
-    # for testing only
-    # @app.route("/unload_data")
-    def unload_data(self, req, resp):
-        if req.method == 'POST':
-            yield from req.read_form_data()
-        else:  # GET, apparently
-            # Note: parse_qs() is not a coroutine, but a normal function.
-            # But you can call it using yield from too.
-            req.parse_qs()
-
-        # Whether form data comes from GET or POST request, once parsed,
-        # it's available as req.form dictionary
-        self.logger.info('Unload data: {}'.format(req.form))
-        if 'name' in req.form:
-            if req.form['name'] == 'wifi_select_loader':
-                self.logger.info('Starting scanning thread again')
-                # start the WiFi scanning thread again
-                self.scanning = True
-    """
-
-    """
-    # for testing only
-    def index(self, req, resp):
-        yield from picoweb.start_response(resp)
-        yield from resp.awrite("<a href='form'>Test Post Form</a><br>")
-        yield from resp.awrite("<a href='wifi_selection'>Choose WiFi</a><br>")
-    """
-
-    """
-    # for testing only
-    # @app.route("/unload")
-    def show_unload(self, req, resp):
-        yield from picoweb.start_response(resp)
-
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='catch_unload.tpl',
-                                            args=(req, ))
-    """
-
-    """
-    # for testing only
-    # @app.route("/form")
-    def show_form(self, req, resp):
-        yield from picoweb.start_response(resp)
-
-        # use POST
-        yield from resp.awrite("POST form:<br>")
-        yield from resp.awrite("<form action='form_url' method='POST'>"
-                               "What is your name? <input name='name'/>"
-                               "<input type='submit'></form>")
-
-        # GET is the default
-        yield from resp.awrite("GET form:<br>")
-        yield from resp.awrite("<form action='form_url'>"
-                               "What is your name? <input name='name'/>"
-                               "<input type='submit'></form>")
-    """
-
-    """
-    # for testing only
-    # @app.route("/form_url")
-    def form_parse(self, req, resp) -> None:
-        if req.method == 'POST':
-            yield from req.read_form_data()
-        else:  # GET, apparently
-            # Note: parse_qs() is not a coroutine, but a normal function.
-            # But you can call it using yield from too.
-            req.parse_qs()
-
-        # Whether form data comes from GET or POST request, once parsed,
-        # it's available as req.form dictionary
-        self.logger.info('Form content: {}'.format(req.form))
-
-        yield from picoweb.start_response(resp)
-        yield from resp.awrite('Hello %s!' % req.form)
-    """
 
     def run(self,
             host: str = '0.0.0.0',
@@ -752,6 +743,8 @@ class WiFiManager(object):
                                                                    port,
                                                                    debug))
         try:
+            # self.app.run()
+            # self.app.run(debug=debug)
             self.app.run(host=host, port=port, debug=debug)
         except KeyboardInterrupt:
             self.logger.debug('Catched KeyboardInterrupt at run of web app')
