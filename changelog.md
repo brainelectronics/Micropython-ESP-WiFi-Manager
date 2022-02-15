@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial [`WiFi Manager`](wifi_manager.py) implementation
 - Micropython [`boot`](boot.py) and [`main`](main.py) files
 - [`README`](README.md) and [`requirements.txt`](requirements.txt) files
+- Compressed version of
+  [`bootstrap.min.css`](simulation/static/css/bootstrap.min.css) and
+  [`bootstrap.min.js`](simulation/static/js/bootstrap.min.js)
 
 #### Simulation
 - [`Simulation README`](simulation/README.md) file
@@ -52,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [network station and client](simulation/src/wifi_helper/network.py)
 - Bash script to prepare all folders for a unittest coverage report
 - Unittests for all modules and fakes
+- Render list of selectable networks in Python and provide result via API
+- `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
 [Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
