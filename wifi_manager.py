@@ -9,7 +9,7 @@ main script, do your stuff here, similar to the loop() function on Arduino
 import gc
 import json
 import machine
-import os
+# import os
 import _thread
 import time
 import ubinascii
@@ -20,7 +20,7 @@ from primitives.message import Message
 
 # pip installed packages
 import picoweb
-import ulogging as logging
+# import ulogging as logging
 import ure as re
 # https://github.com/pfalcon/picoweb
 # https://github.com/pfalcon/pycopy-lib/blob/9b8bbae774140563e9be138724de083267f99ff9/logging/
@@ -90,7 +90,7 @@ class WiFiManager(object):
         if PathHelper.exists(path=self._config_file):
             self.logger.debug('Encrypted wifi config file exists')
             loaded_cfg = self._load_wifi_config_data(path=self._config_file,
-                                                    encrypted=True)
+                                                     encrypted=True)
 
             private_cfg = None
             ssids = list()
@@ -334,7 +334,7 @@ class WiFiManager(object):
               wh: WifiHelper,
               msg: Message,
               scan_interval: int,
-              lock: lock) -> None:
+              lock: int) -> None:
         """
         Scan for available networks.
 
@@ -347,7 +347,7 @@ class WiFiManager(object):
         :param      scan_interval:  The scan interval in milliseconds
         :type       scan_interval:  int
         :param      lock:           The lock object
-        :type       lock:           lock
+        :type       lock:           _thread.lock
         """
         pixel.fading = True
 

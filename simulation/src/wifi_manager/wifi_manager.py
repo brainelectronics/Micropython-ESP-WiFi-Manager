@@ -347,7 +347,7 @@ class WiFiManager(object):
         :param      scan_interval:  The scan interval in milliseconds
         :type       scan_interval:  int
         :param      lock:           The lock object
-        :type       lock:           lock
+        :type       lock:           _thread.lock
         """
         pixel.fading = True
 
