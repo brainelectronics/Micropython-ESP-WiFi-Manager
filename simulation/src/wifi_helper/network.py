@@ -78,8 +78,6 @@ class NetworkHelper(object):
         scan_result = subprocess.check_output(['/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport', '--scan'])
 
         if len(scan_result) == 0:
-            print('### Check WiFi to be active ###')
-            print('Returning dummy data')
             return NetworkHelper._dummy_data()
 
         scan_result = [ele.decode('ascii') for ele in scan_result.splitlines()]
@@ -188,17 +186,14 @@ class NetworkHelper(object):
         try:
             scan_result = subprocess.check_output(['netsh', 'wlan', 'show', 'networks', 'mode=bssid'])
         except Exception as e:
-            print('Failed to scan due to this error: {}'.format(e))
-            print('### Check WiFi to be active ###')
-            print('Returning dummy data')
+            # print('Failed to scan due to this error: {}'.format(e))
             return NetworkHelper._dummy_data()
 
         # netsh call returns report in local language, try to decode it
         try:
             scan_result = [ele.decode('cp850').lstrip() for ele in scan_result.splitlines()]
         except Exception as e:
-            print('Failed to decode scan data due to this error: {}'.format(e))
-            print('Returning dummy data')
+            # print('Failed to decode scan data due to this error: {}'.format(e))
             return NetworkHelper._dummy_data()
 
         # [
@@ -366,6 +361,7 @@ class NetworkHelper(object):
                 'hidden': False
             }
         ]
+        # print('Returning dummy data')
 
         return nets
 

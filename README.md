@@ -97,6 +97,38 @@ cp SOURCE_FILE_NAME /pyboard/NEW_FILE_NAME
 Copying '/Users/Jones/Downloads/MicroPython/ESP-WiFi-Manager/wifi_manager.py' to '/pyboard/wifi_manager.py' ...
 ```
 
+Create compressed CSS and JS files as described in the
+[simulation static files README](simulation/static) to save disk space on the
+device and increase the performance (webpages are loading faster)
+
+```bash
+mkdir /pyboard/static/
+cp simulation/static/css/*.gz /pyboard/static/
+# around 24kB compared to uncompressed 120kB
+
+# optional, not used so far
+mkdir /pyboard/static/
+cp simulation/static/js/*.gz /pyboard/static/
+# around 12kB compared to uncompressed 40kB
+
+mkdir /pyboard/templates
+cp templates/* /pyboard/templates
+# around 20kB
+
+mkdir /pyboard/helpers
+cp helpers/*.py /pyboard/helpers
+# around 64kB
+
+mkdir /pyboard/primitives
+cp primitives/* /pyboard/primitives
+# around 8kB
+
+cp boot.py /pyboard
+cp main.py /pyboard
+cp wifi_manager.py /pyboard
+# around 40kB
+```
+
 ##### Open REPL in rshell
 
 Call `repl` in the rshell. Use CTRL+X to leave the repl or CTRL+D for a soft

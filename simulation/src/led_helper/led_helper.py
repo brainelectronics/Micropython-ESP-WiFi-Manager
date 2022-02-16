@@ -312,7 +312,6 @@ class Neopixel(object):
         self.fade_pixel_amount = pixel_amount
         self.fading = True
 
-    # def _fade(self, delay_ms: int, pixel_amount: int, lock: lock) -> None:
     def _fade(self, delay_ms: int, pixel_amount: int, lock: int) -> None:
         """
         Internal Neopixel fading thread content.

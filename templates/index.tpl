@@ -6,8 +6,12 @@
   <meta name="description" content="WiFi Manager Index page">
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Setup</title>
-  <link href="static/css/bootstrap.min.css" rel="stylesheet">
-  <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <!--
+  <link href="style.css" rel="stylesheet">
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <line href="list-groups.css" rel="stylesheet">
+  -->
 </head>
 <body>
   <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">

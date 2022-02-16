@@ -84,6 +84,7 @@ input[type=text]:focus, input[type=password]:focus, select:focus {
   border: 3px solid #4CAF50;
 }
 
+/*
 input[type=button], input[type=submit], input[type=reset] {
   background-color: #4CAF50;
   border: none;
@@ -100,6 +101,7 @@ input[type=button], input[type=submit], input[type=reset] {
   display: inline-block;
   box-shadow: 0 9px #999;
 }
+*/
 
 table {
   font-family: arial, sans-serif;

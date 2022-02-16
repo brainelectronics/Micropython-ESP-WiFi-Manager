@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-"""connect to specified network(s) or create an accesspoint"""
+"""
+WiFi Helper
+
+Connect to specified network(s) or create an accesspoint
+"""
 
 # import ubinascii
 import json
@@ -341,7 +345,8 @@ class WifiHelper(object):
                 try:
                     net['authmode'] = self.auth_modes[net['authmode']]
                 except KeyError:
-                    print('{} is unknown authmode'.format(net['authmode']))
+                    # print('{} is unknown authmode'.format(net['authmode']))
+                    pass
                 except Exception:
                     pass
             if 'bssid' in net:

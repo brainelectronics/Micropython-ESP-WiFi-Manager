@@ -10,7 +10,7 @@ from Crypto.Cipher import AES
 import gc
 import json
 from machine import machine
-import os
+# import os
 from pathlib import Path
 import _thread
 import time
@@ -21,7 +21,7 @@ from typing import List, Union
 from generic_helper import Message
 
 # pip installed packages
-from flask import Flask, render_template, abort, request, jsonify
+from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
 
 # custom packages
 from generic_helper import GenericHelper
@@ -65,11 +65,12 @@ class WiFiManager(object):
         self._enc_key = (uuid * amount).decode('ascii')[:required_len]
 
         self._configured_networks = list()
+        self._selected_network_bssid = ''
 
         # WiFi scan specific defines
         self._scan_lock = _thread.allocate_lock()
         self._scan_interval = 5000  # milliseconds
-        # Queue also works, but not in this case there is no need for a history
+        # Queue also works, but in this case there is no need for a history
         self._scan_net_msg = Message()
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
@@ -120,7 +121,8 @@ class WiFiManager(object):
             # self._configured_networks = list(ssids).copy()
             # self.logger.debug('All SSIDs: {}'.format(ssids))
             self.logger.debug('Config content: {}'.format(loaded_cfg))
-            self.logger.debug('Private config content: {}'.format(private_cfg))
+            self.logger.debug('Private config content: {}'.
+                              format(private_cfg))
             self.logger.debug('Configured networks: {}'.
                               format(self._configured_networks))
 
@@ -152,8 +154,10 @@ class WiFiManager(object):
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
         self.app.add_url_rule("/", view_func=self.landing_page)
-        self.app.add_url_rule("/wifi_selection", view_func=self.wifi_selection)
-        self.app.add_url_rule("/wifi_configs", view_func=self.wifi_configs)
+        self.app.add_url_rule("/select", view_func=self.wifi_selection)
+        self.app.add_url_rule("/render_network_inputs",
+                              view_func=self.render_network_inputs)
+        self.app.add_url_rule("/configure", view_func=self.wifi_configs)
         self.app.add_url_rule("/save_wifi_config",
                               view_func=self.save_wifi_config,
                               methods=['POST', 'GET'])
@@ -161,6 +165,14 @@ class WiFiManager(object):
                               view_func=self.remove_wifi_config,
                               methods=['POST', 'GET'])
         self.app.add_url_rule("/scan_result", view_func=self.scan_result)
+
+        self.app.add_url_rule(
+            "/static/css/bootstrap.min.css",
+            view_func=self.styles
+        )
+        # regex not supported in Flask
+        # self.app.add_url_rule(re.compile('^\/(.+\.css)$'),
+        #                       view_func=self.styles)
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
@@ -270,7 +282,8 @@ class WiFiManager(object):
 
     def _load_wifi_config_data(self,
                                path: str,
-                               encrypted: bool = False) -> Union[dict, List[dict]]:
+                               encrypted: bool = False) -> Union[dict,
+                                                                 List[dict]]:
         """
         Load WiFi configuration data from file.
 
@@ -286,7 +299,8 @@ class WiFiManager(object):
 
         if encrypted:
             # read file in binary as it contains encrypted data
-            encrypted_read_data = GenericHelper.load_file(path=path, mode='rb')
+            encrypted_read_data = GenericHelper.load_file(path=path,
+                                                          mode='rb')
             self.logger.debug('Read encrypted data: {}'.
                               format(encrypted_read_data))
 
@@ -321,7 +335,6 @@ class WiFiManager(object):
               msg: Message,
               scan_interval: int,
               lock: int) -> None:
-              # lock: lock) -> None:
         """
         Scan for available networks.
 
@@ -334,7 +347,7 @@ class WiFiManager(object):
         :param      scan_interval:  The scan interval in milliseconds
         :type       scan_interval:  int
         :param      lock:           The lock object
-        :type       lock:           lock
+        :type       lock:           _thread.lock
         """
         pixel.fading = True
 
@@ -369,8 +382,8 @@ class WiFiManager(object):
         """
         Set the WiFi scan interval in milliseconds.
 
-        Values below 1000ms are set to 1000ms.
-        One scan takes around 3 sec, which leads to maximum 15 scans per minute
+        Values below 1000 ms are set to 1000 ms.
+        One scan takes around 3 sec, which leads to maximum 15 scans per min
 
         :param      value:  Interval of WiFi scans in milliseconds
         :type       value:  int
@@ -423,70 +436,90 @@ class WiFiManager(object):
         # free = gc.mem_free()
         # self.logger.debug('Free memory: {}'.format(free))
         latest_scan_result = self._scan_net_msg.value()
-        self.logger.info('Requested latest scan result: {}'.format(latest_scan_result))
+        self.logger.info('Requested latest scan result: {}'.
+                         format(latest_scan_result))
         return latest_scan_result
 
-    # -------------------------------------------------------------------------
-    # Webserver functions
+    def _render_network_inputs(self,
+                               available_nets: dict,
+                               selected_bssid: str = '') -> str:
+        """
+        Render HTML list of selectable networks
 
-    # @app.route('/landing_page')
-    def landing_page(self):
-        # return render_template('wifi_select_loader.tpl.html',
-        return render_template('index.tpl.html')
+        :param      available_nets:  All available nets
+        :type       available_nets:  dict
+        :param      selected_bssid:  Currently selected network on the webpage
+        :type       selected_bssid:  str
 
-    # @app.route('/scan_result')
-    def scan_result(self):
-        return jsonify(self.latest_scan)
+        :returns:   Sub content of WiFi selection page
+        :rtype:     str
+        """
+        content = ""
+        if len(available_nets):
+            for ele in available_nets:
+                selected = ''
+                if ele['bssid'] == selected_bssid:
+                    selected = "checked"
+                content += """
+                <input class="list-group-item-check" type="radio" name="bssid" id="{bssid}" value="{bssid}" onclick="remember_selected_element(this)" {state}>
+                <label class="list-group-item py-3" for="{bssid}">
+                  {ssid}
+                  <span class="d-block small opacity-50">
+                    Signal quality {quality}&#37;, BSSID {bssid}
+                  </span>
+                </label>
+                """.format(bssid=ele['bssid'],
+                           state=selected,
+                           ssid=ele['ssid'],
+                           quality=ele['quality'])
+        else:
+            # as long as no networks are available show a spinner
+            content = """
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            """
 
-    # @app.route('/wifi_selection')
-    def wifi_selection(self):
-        # abort(404)
-        available_nets = self.latest_scan
-        # return render_template('wifi_select_loader.tpl.html',
-        return render_template('wifi_select_loader_bootstrap.tpl.html',
-                               wifi_nets=available_nets)
+        return content
 
-    # @app.route('/wifi_configs')
-    def wifi_configs(self):
-        # abort(404)
-        configured_nets = self.configured_networks
-        self.logger.debug('Existing config content: {}'.
-                          format(configured_nets))
+    def _save_wifi_config(self, form_data: dict) -> None:
+        """
+        Save a new WiFi configuration to the WiFi configuration file.
 
-        if isinstance(configured_nets, str):
-            configured_nets = [configured_nets]
-
-        return render_template('wifi_configs.tpl.html',
-                               wifi_nets=configured_nets)
-
-    # @app.route('/save_wifi_config', methods=['POST', 'GET'])
-    def save_wifi_config(self):
-        # abort(404)
-        if request.method == 'POST':
-            data = request.form
-
-        form_data = dict(request.form)
-
-        # print('Posted data in save_wifi_config: {}'.format(data))
-        self.logger.info('WiFi user input content: {}'.format(form_data))
-        # {'bssid': 'a0f3c1fbfc3c', 'ssid': '', 'password': 'sdsfv'}
-
-        network_cfg = self._save_wifi_config(form_data=form_data)
-
-        # resp = jsonify(success=True)
-        # return resp
-        return render_template('result.html', result=network_cfg)
-
-    def _save_wifi_config(self, form_data: dict) -> dict:
+        :param      form_data:  The form data
+        :type       form_data:  dict
+        """
         network_cfg = dict()
         available_nets = self.latest_scan
         self.logger.info('Available nets: {}'.format(available_nets))
-        # [{'ssid': 'TP-LINK_FBFC3C', 'RSSI': -21, 'bssid': 'a0f3c1fbfc3c', 'authmode': 'WPA/WPA2-PSK', 'quality': 9, 'channel': 1, 'hidden': False}, {'ssid': 'FRITZ!Box 7490', 'RSSI': -17, 'bssid': '3810d517eb39', 'authmode': 'WPA2-PSK', 'quality': 27, 'channel': 11, 'hidden': False}]
+        # [
+        #   {
+        #       'ssid': 'TP-LINK_FBFC3C',
+        #       'RSSI': -21,
+        #       'bssid': 'a0f3c1fbfc3c',
+        #       'authmode': 'WPA/WPA2-PSK',
+        #       'quality': 9,
+        #       'channel': 1,
+        #       'hidden': False
+        #   },
+        #   {
+        #       'ssid': 'FRITZ!Box 7490',
+        #       'RSSI': -17,
+        #       'bssid': '3810d517eb39',
+        #       'authmode': 'WPA2-PSK',
+        #       'quality': 27,
+        #       'channel': 11,
+        #       'hidden': False
+        #   }
+        # ]
 
         # find SSID of network based on given bssid value
         if form_data['ssid'] != '':
             network_cfg['ssid'] = form_data['ssid']
         else:
+            if 'bssid' not in form_data:
+                return
+
             # selected_bssid = form_data['wifi_network']
             selected_bssid = form_data['bssid']
             for ele in available_nets:
@@ -497,11 +530,11 @@ class WiFiManager(object):
                     # JSON which does not handle bytes format
                     this_bssid = str(ele['bssid'])
                 else:
-                    this_bssid = ele['bssid']   #.decode('ascii')
+                    this_bssid = ele['bssid']   # .decode('ascii')
 
                 if this_bssid == selected_bssid:
                     # use string, json loading will fail otherwise later
-                    network_cfg['ssid'] = ele['ssid']   #.decode('ascii')
+                    network_cfg['ssid'] = ele['ssid']   # .decode('ascii')
                     break
 
         network_cfg['password'] = form_data['password']
@@ -523,87 +556,178 @@ class WiFiManager(object):
         else:
             self.logger.info('No valid SSID found, will not save this net')
 
-        return network_cfg
+    def _remove_wifi_config(self, form_data: dict) -> None:
+        """
+        Remove a WiFi network from the WiFi configuration file.
+
+        :param      form_data:  The form data
+        :type       form_data:  dict
+        """
+        if len(form_data):
+            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
+                                                     encrypted=True)
+
+            updated_cfg = list()
+            updated_ssids = list()
+
+            for net in loaded_cfg:
+                if net['ssid'] not in form_data:
+                    updated_cfg.append(net)
+                    updated_ssids.append(net['ssid'])
+
+            self._configured_networks = updated_ssids.copy()
+
+            # create bytes array of the dict and encrypt it
+            encrypted_data = self._encrypt_data(data=updated_cfg)
+
+            # save to file as binary
+            GenericHelper.save_file(data=encrypted_data,
+                                    path=self._config_file,
+                                    mode='wb')
+            self.logger.debug('Saved encrypted data as json: {}'.
+                              format(encrypted_data))
+
+    # -------------------------------------------------------------------------
+    # Webserver functions
+
+    # @app.route('/landing_page')
+    def landing_page(self):
+        """Provide landing aka index page"""
+        return render_template('index.tpl.html')
+
+    # @app.route('/scan_result')
+    def scan_result(self):
+        """Provide latest found networks as JSON"""
+        return jsonify(self.latest_scan)
+
+    # @app.route('/select')
+    def wifi_selection(self):
+        """
+        Provide webpage to select WiFi network from list of available networks
+
+        Scanning just in time of accessing the page would block all processes
+        for approx. 2.5 sec.
+        Using the result provided by the scan thread via a message takes only
+        0.02 sec to complete
+        """
+        available_nets = self.latest_scan
+        content = self._render_network_inputs(available_nets=available_nets)
+
+        # do not stop scanning as page is updating scan results on the fly
+        # with XMLHTTP requests to @see scan_result
+        # stop scanning thread
+        # self.logger.info('Stopping scanning thread')
+        # self.scanning = False
+
+        return render_template('select.tpl.html', content=content)
+
+    # @app.route('/render_network_inputs')
+    def render_network_inputs(self) -> str:
+        """Return rendered network inputs content to webpage"""
+        available_nets = self.latest_scan
+        selected_bssid = self._selected_network_bssid
+        content = self._render_network_inputs(available_nets=available_nets,
+                                              selected_bssid=selected_bssid)
+        return content
+
+    # @app.route('/configure')
+    def wifi_configs(self):
+        """Provide webpage with table of configured networks"""
+        configured_nets = self.configured_networks
+        self.logger.debug('Existing config content: {}'.
+                          format(configured_nets))
+
+        if isinstance(configured_nets, str):
+            configured_nets = [configured_nets]
+
+        # disable submit button by default
+        return render_template('remove.tpl.html',
+                               wifi_nets=configured_nets,
+                               button_mode='disabled')
+
+    # @app.route('/save_wifi_config', methods=['POST', 'GET'])
+    def save_wifi_config(self):
+        form_data = dict(request.form)
+
+        self.logger.info('WiFi user input content: {}'.format(form_data))
+        # result if a network of the list has been selected
+        # {'bssid': 'a0f3c1fbfc3c', 'ssid': '', 'password': 'sdsfv'}
+        # result if a custom network is given
+        # {'ssid': 'myCustom Net', 'password': 'asdf1234'}
+        # result if nothing is selected
+        # {'ssid': '', 'password': ''}
+
+        self._save_wifi_config(form_data=form_data)
+
+        return redirect(url_for('landing_page'))
 
     # @app.route('/remove_wifi_config', methods=['POST', 'GET'])
     def remove_wifi_config(self):
-        # abort(404)
-        if request.method == 'POST':
-            data = request.args
+        """Remove a configured WiFi network"""
+        form_data = dict(request.form)
 
-        # Whether form data comes from GET or POST request, once parsed,
-        # it's available as req.form dictionary
-        form_data = request.get_json(force=True)
-        self.logger.info('Received data: {}'.format(form_data))
-        # print('Posted data in remove_wifi_config: {}'.format(data))
+        self.logger.info('Remove networks: {}'.format(form_data))
+        # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
 
-        if all(ele in form_data for ele in ['name', 'index']):
-            network_name = form_data['name']
-            network_index = int(form_data['index']) - 1  # th is also counted
+        self._remove_wifi_config(form_data=form_data)
 
-            self.logger.debug('Remove network "{}" at index {}'.
-                              format(form_data['name'], form_data['index']))
+        return redirect(url_for('landing_page'))
 
-            if network_name == "all" and network_index == -1:
-                if PathHelper.exists(path=self._config_file):
-                    os.remove(self._config_file)
-                    self.logger.debug('Removed network file')
-                return
+    # @app.route(re.compile('^\/(.+\.css)$'))
+    def styles(self):
+        """
+        Send gzipped CSS content if supported by client.
 
-            loaded_cfg = self._load_wifi_config_data(path=self._config_file,
-                                                     encrypted=True)
-            self.logger.debug('Existing config content: {}'.format(loaded_cfg))
+        Shows specifying headers as a flat binary string, more efficient if
+        such headers are static.
+        """
+        file_path = str(request.url_rule)
+        headers = b'Cache-Control: max-age=86400\r\n'
 
-            try:
-                network_cfg = loaded_cfg[network_index]
-                if network_cfg['ssid'] == network_name:
-                    self.logger.debug('Found specified network in network cfg')
+        if 'gzip' in str(request.headers):
+            self.logger.debug('gzip accepted for CSS style file')
+            file_path += '.gz'
+            headers += b'Content-Encoding: gzip\r\n'
 
-                    ssids = list()
-                    if isinstance(loaded_cfg, list):
-                        # remove element from list
-                        del loaded_cfg[network_index]
+        self.logger.debug('Accessed file {}'.format(file_path))
+        return self.sendfile(writer=request,
+                             fname=file_path,
+                             content_type='text/css',
+                             headers=headers)
 
-                        self.logger.debug('Updated data: {}'.
-                                          format(loaded_cfg))
+    def sendfile(self,
+                 fname: str,
+                 content_type: str,
+                 headers: str,
+                 writer=None):
+        """
+        Fake function to send file in same style as in PicoWeb on Micropython
 
-                        # list of dicts
-                        for net in loaded_cfg:
-                            if 'ssid' in net:
-                                ssids.append(net['ssid'])
-                    elif isinstance(loaded_cfg, dict):
-                        pass
-                        # do not do anything, updated data will be empty list
+        :param      fname:         The filename
+        :type       fname:         str
+        :param      content_type:  The content type
+        :type       content_type:  str
+        :param      headers:       The headers
+        :type       headers:       str
+        :param      writer:        The writer
+        :type       writer:        Optional
+        """
+        flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
+        file_path = str(flask_root_folder) + str(fname)
 
-                        # if 'ssid' in loaded_cfg:
-                        #     ssids = loaded_cfg['ssid']
+        self.logger.debug('Open file {}'.format(file_path))
+        with open(file_path, 'rb') as file:
+            content = file.read()
 
-                    self._configured_networks = ssids.copy()
+        res = make_response(content)
+        res.headers["Content-Type"] = content_type
+        # res.headers['Content-Length'] = len(content)
 
-                    # create bytes array of the dict and encrypt it
-                    encrypted_data = self._encrypt_data(data=loaded_cfg)
+        for ele in headers.decode('ascii').splitlines():
+            key, value = ele.split(':')
+            res.headers[key] = value.lstrip()
 
-                    # save to file as binary
-                    GenericHelper.save_file(data=encrypted_data,
-                                            path=self._config_file,
-                                            mode='w')     # 'wb' for encrypted data
-                    self.logger.debug('Saved encrypted data as json: {}'.
-                                      format(encrypted_data))
-            except IndexError as e:
-                self.logger.debug('Specified network at index {} not found'.
-                                  format(network_index))
-            except Exception as e:
-                self.logger.debug('Catched: {}'.format(e))
-
-        # resp = jsonify(success=True)
-        # return resp
-        return render_template('result.html', result=data)
-
-    """
-    @app.route('/result')
-    def show_result():
-        return render_template('result.html', result=result)
-    """
+        return res
 
     def run(self,
             host: str = '0.0.0.0',

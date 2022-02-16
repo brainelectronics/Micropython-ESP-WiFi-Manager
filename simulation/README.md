@@ -28,6 +28,17 @@ On Windows the package `pycryptodome>=3.14.0,<4` shall be used instead of
 
 Simulation webpages use [bootstrap 3.4][ref-bootstrap-34].
 
+## Usage
+
+Run the simulation of the ESP WiFi Manager **after** activating the virtual
+environment of the [Setup section](#setup)
+
+```bash
+sh run.sh
+```
+
+Open [`http://127.0.0.1:5000/`](http://127.0.0.1:5000/){:target="_blank"} in a browser
+
 ## Unittests
 
 ### General
@@ -169,17 +180,6 @@ Test [`wifi manager`][ref-wifi-manager-test] implementation.
 ```bash
 nose2 --config tests/unittest.cfg -v tests.test_wifi_manager.TestWiFiManager
 ```
-
-## Usage
-
-Run the simulation of the ESP WiFi Manager **after** activating the virtual
-environment of the [Setup section](#setup)
-
-```bash
-sh run.sh
-```
-
-Open [`http://127.0.0.1:5000/`](http://127.0.0.1:5000/){:target="_blank"} in a browser
 
 <!-- Links -->
 <!-- Generic -->

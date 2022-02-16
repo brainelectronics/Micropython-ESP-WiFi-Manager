@@ -1,3 +1,4 @@
+{% args req, wifi_nets, button_mode %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,8 +7,12 @@
   <meta name="description" content="Remove configured WiFi network">
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Remove WiFi Network</title>
-  <link href="static/css/bootstrap.min.css" rel="stylesheet">
-  <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <!--
+  <link href="style.css" rel="stylesheet">
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="list-groups.css" rel="stylesheet">
+  -->
   <style type="text/css">
     .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-color:gray;color:#fff;opacity:1;transition:.5s;visibility:visible}
     .overlay.hidden{opacity:0;visibility:hidden}
