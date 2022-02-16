@@ -630,7 +630,7 @@ class WiFiManager(object):
         yield from picoweb.start_response(resp)
         yield from self.app.render_template(writer=resp,
                                             tmpl_name='select.tpl',
-                                            args=(req, available_nets, ))
+                                            args=(req, content, ))
 
     # @app.route("/render_network_inputs")
     def render_network_inputs(self, req, resp) -> str:
