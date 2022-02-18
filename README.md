@@ -107,8 +107,8 @@ cp simulation/static/css/*.gz /pyboard/static/
 # around 24kB compared to uncompressed 120kB
 
 # optional, not used so far
-mkdir /pyboard/static/
-cp simulation/static/js/*.gz /pyboard/static/
+# mkdir /pyboard/static/
+# cp simulation/static/js/*.gz /pyboard/static/
 # around 12kB compared to uncompressed 40kB
 
 mkdir /pyboard/templates
@@ -120,12 +120,16 @@ cp helpers/*.py /pyboard/helpers
 # around 64kB
 
 mkdir /pyboard/primitives
-cp primitives/* /pyboard/primitives
+cp primitives/*.py /pyboard/primitives
 # around 8kB
 
-cp boot.py /pyboard
-cp main.py /pyboard
+mkdir /pyboard/lib
+cp -r lib/* /pyboard/lib
+# around 72kB
+
 cp wifi_manager.py /pyboard
+cp main.py /pyboard
+cp boot.py /pyboard
 # around 40kB
 ```
 
