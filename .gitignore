@@ -23,7 +23,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# micropython libs are stored in lib/
+# lib/
 lib64/
 parts/
 sdist/
