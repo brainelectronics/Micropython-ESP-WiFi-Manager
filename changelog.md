@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compressed version of
   [`bootstrap.min.css`](simulation/static/css/bootstrap.min.css) and
   [`bootstrap.min.js`](simulation/static/js/bootstrap.min.js)
+- Scan only for available networks if `start_config` is called
 
 #### Simulation
 - [`Simulation README`](simulation/README.md) file
