@@ -74,8 +74,8 @@ class WiFiManager(object):
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
 
-        # finally start the WiFi scanning thread
-        self.scanning = True
+        # start the WiFi scanning thread as soon as "start_config" is called
+        self.scanning = False
 
     def load_and_connect(self) -> bool:
         """
@@ -148,8 +148,21 @@ class WiFiManager(object):
         ifconfig = self.wh.ifconfig_ap
         self.logger.debug(ifconfig)
 
+        # start scanning for available networks
+        self.scanning = True
+
         # finally
         self.run(host=ifconfig.ip, port=80, debug=True)
+
+        self.logger.debug('Finished running the PicoWeb application')
+        self.scanning = False
+        self.logger.debug('Stopped scanning thread')
+
+        # wait some time to end all threads savely
+        time.sleep(5)
+
+        gc.collect()
+        self.logger.debug('Goodbye from WiFiManager')
 
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
