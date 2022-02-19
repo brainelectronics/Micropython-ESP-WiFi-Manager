@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <meta name="description" content="Result helper page">
+    <meta name="author" content="Jonas Scharpf aka brainelectronics">
+    <title>Result</title>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico"> -->
+  </head>
+
+  <body>
+    <!--
+    <div class="container">
+      <header class="d-flex justify-content-center py-3 ">
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a href="#" class="nav-link" aria-current="page">Home</a></li>
+          <li class="nav-item"><a href="javascript:history.back()" class="nav-link" aria-current="page">Back</a></li>
+        </ul>
+      </header>
+    </div>
+    -->
+
+    <div class="container">
+      <div class="top-pad">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Key</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, value in result.items() %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td> {{ key }} </th>
+              <td> {{ value }} </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+       </table>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  </body>
+</html>
