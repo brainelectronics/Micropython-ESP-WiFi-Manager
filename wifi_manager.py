@@ -370,10 +370,10 @@ class WiFiManager(object):
                 found_nets = wh.get_wifi_networks_sorted(rescan=True,
                                                          scan_if_empty=True)
 
+                msg.set(found_nets)
+
                 # wait for specified time
                 time.sleep_ms(scan_interval)
-
-                msg.set(found_nets)
             except KeyboardInterrupt:
                 break
 
