@@ -8,6 +8,7 @@ simulation/wifi-secure.json
 .idea
 simulation/reports/*
 .rshell-setup
+configs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

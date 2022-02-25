@@ -1,3 +1,0 @@
-[submodule "helpers"]
-	path = helpers
-	url = git@github.com:brainelectronics/micropython-modules.git
