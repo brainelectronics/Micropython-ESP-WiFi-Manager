@@ -30,14 +30,14 @@ import picoweb
 import ure as re
 
 # custom packages
-from be_helpers import GenericHelper
-from be_helpers import Message
-from be_helpers import Neopixel
-from be_helpers import PathHelper
-from be_helpers import WifiHelper
+from be_helpers.generic_helper import GenericHelper
+from be_helpers.message import Message
+from be_helpers.led_helper import Neopixel
+from be_helpers.path_helper import PathHelper
+from be_helpers.wifi_helper import WifiHelper
 
 # typing not natively supported on micropython
-from be_helpers import List, Union
+from be_helpers.typing import List, Union
 
 
 class WiFiManager(object):
@@ -51,7 +51,7 @@ class WiFiManager(object):
         self.logger.disabled = quiet
         self._config_file = 'wifi-secure.json'
 
-        self.app = picoweb.WebApp(pkg=None)
+        self.app = picoweb.WebApp(pkg='/lib')
         self.wh = WifiHelper()
         self.pixel = Neopixel()
         self.pixel.color = 'yellow'
@@ -736,9 +736,10 @@ class WiFiManager(object):
             file_path += '.gz'
             headers += b'Content-Encoding: gzip\r\n'
 
-        self.logger.debug('Accessed file {}'.format('static/' + file_path))
+        complete_file_path = 'static/css/' + file_path
+        self.logger.debug('Accessed file {}'.format(complete_file_path))
         yield from self.app.sendfile(writer=resp,
-                                     fname='static/' + file_path,
+                                     fname=complete_file_path,
                                      content_type='text/css',
                                      headers=headers)
 
