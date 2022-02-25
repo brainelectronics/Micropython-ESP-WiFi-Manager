@@ -1,4 +1,5 @@
 *.o
+*/R.py
 
 .vagrant/
 
@@ -6,6 +7,7 @@
 simulation/wifi-secure.json
 .idea
 simulation/reports/*
+.rshell-setup
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
