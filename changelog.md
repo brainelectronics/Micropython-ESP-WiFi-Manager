@@ -14,6 +14,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.0.0] - 2022-02-25
+### Added
+- [`setup.py`](setup.py) and [`sdist_upip.py`](sdist_upip.py) taken from
+  [pfalcon's picoweb repo][ref-pfalcon-picoweb-sdist-upip] and PEP8 improved
+- [`MIT License`](LICENSE)
+- [`version.py`](wifi_manager/version.py) storing current library version
+
+### Changed
+- Moved all MicroPython WiFi manager files into folder named
+  [`wifi_manager`](wifi_manager)
+- Update [`README`](README.md) usage description of MicroPython lib deploy to
+  [PyPi][ref-pypi]
+- Usage examples in [`README`](README.md) updated with new import path
+- Moved static web files from [`simulation/static`](simulation/static/) to
+  [`static`](static)
+- Adjust path to static folder in
+  [WiFi Manager Simulation](simulation/src/wifi_manager/wifi_manager.py) from
+  [`simulation/static`](simulation/static/) to [`static`](static)
+- Update [WiFi Manager simulation](simulation/src/wifi_manager/wifi_manager.py)
+  to latest MicroPython implementation
+- Update [`boot`](boot.py) and [`main`](main.py) files to use `be_helpers`
+
+### Removed
+- MicroPython helpers module no longer used, replaced by pip install
+  requirement
+- Lib of dependency modules no longer used
+- Primitives folder no longer used, files are part of
+  [brainelectronics MicroPython helpers][ref-be-micropython-module]
+- Unused `style.css` from [`static`](static)
+
 ## [0.1.1] - 2022-02-19
 ### Fixed
 - Sleep after adding the latest found networks to the asyncio message, not
@@ -65,6 +95,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/0.1.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.0.0...develop
 
+[1.0.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.0.0
+[0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
+
+[ref-pypi]: https://pypi.org/
+[ref-pfalcon-picoweb-sdist-upip]: https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/sdist_upip.py
+[ref-be-micropython-module]: https://github.com/brainelectronics/micropython-modules/tree/1.1.0
