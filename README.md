@@ -1,7 +1,6 @@
 # ESP WiFi Manager
 
-Simple Flask style Micropython Server running on an ESP32
-
+MicroPython WiFi Manager to configure and connect to networks
 
 -----------------------
 
@@ -52,7 +51,7 @@ is no external PRSAM only the non SPIRAM version is working.
 
 ### Upload files to board
 
-### Install package with pip
+#### Install package with pip
 
 Connect to a network
 
@@ -84,6 +83,9 @@ upip.install('micropython-esp-wifi-manager')
 
 #### rshell
 
+Copy the module(s) to the MicroPython board and import them as shown below
+using [Remote MicroPython shell][ref-remote-upy-shell]
+
 Open the remote shell with the following command. Additionally use `-b 115200`
 in case no CP210x is used but a CH34x.
 
@@ -91,73 +93,28 @@ in case no CP210x is used but a CH34x.
 rshell -p /dev/tty.SLAB_USBtoUART --editor nano
 ```
 
-##### Setup check
-
-Check the board config with this simple `boards` call inside the rshell. The
-result will look similar to this after the connection
-
-```bash
-Using buffer-size of 32
-Connecting to /dev/tty.SLAB_USBtoUART (buffer-size 32)...
-Trying to connect to REPL  connected
-Retrieving sysname ... esp32
-Testing if ubinascii.unhexlify exists ... Y
-Retrieving root directories ... /boot.py/ /helpers/ /lib/ /main.py/ /templates/ /wifi-secure.json/ /winbond.py/
-Setting time ... Oct 11, 2021 13:15:24
-Evaluating board_name ... pyboard
-Retrieving time epoch ... Jan 01, 2000
-Welcome to rshell. Use Control-D (or the exit command) to exit rshell.
-/Users/Jones/Downloads/MicroPython/ESP-Webserver-Picoweb> boards
-pyboard @ /dev/tty.SLAB_USBtoUART connected Epoch: 2000 Dirs: /boot.py /static /templates /wifi_manager.py /pyboard/boot.py /pyboard/static /pyboard/templates /pyboard/wifi_manager.py
-```
-
-##### Download files (with script)
-
-Files can be copied to the device with the following command
-
-```bash
-cp SOURCE_FILE_NAME /pyboard
-
-# optional copy it as another file name
-cp SOURCE_FILE_NAME /pyboard/NEW_FILE_NAME
-```
-
-```bash
-/Users/Jones/Downloads/MicroPython/ESP-WiFi-Manager/> cp wifi_manager.py /pyboard
-Copying '/Users/Jones/Downloads/MicroPython/ESP-WiFi-Manager/wifi_manager.py' to '/pyboard/wifi_manager.py' ...
-```
-
 Create compressed CSS and JS files as described in the
 [simulation static files README](simulation/static) to save disk space on the
 device and increase the performance (webpages are loading faster)
 
 ```bash
-mkdir /pyboard/static/
-cp simulation/static/css/*.gz /pyboard/static/
+mkdir /pyboard/lib/
+mkdir /pyboard/lib/wifi_manager/
+mkdir /pyboard/lib/wifi_manager/static/
+mkdir /pyboard/lib/wifi_manager/static/css
+cp static/css/*.gz /pyboard/lib/wifi_manager/static/css
 # around 24kB compared to uncompressed 120kB
 
 # optional, not used so far
-# mkdir /pyboard/static/
-# cp simulation/static/js/*.gz /pyboard/static/
+# mkdir /pyboard/lib/wifi_manager/static/js
+# cp static/js/*.gz /pyboard/lib/wifi_manager/static/js
 # around 12kB compared to uncompressed 40kB
 
-mkdir /pyboard/templates
-cp templates/* /pyboard/templates
+mkdir /pyboard/lib/wifi_manager/templates/
+cp templates/* /pyboard/lib/wifi_manager/templates/
 # around 20kB
 
-mkdir /pyboard/helpers
-cp helpers/*.py /pyboard/helpers
-# around 64kB
-
-mkdir /pyboard/primitives
-cp primitives/*.py /pyboard/primitives
-# around 8kB
-
-mkdir /pyboard/lib
-cp -r lib/* /pyboard/lib
-# around 72kB
-
-cp wifi_manager.py /pyboard
+cp wifi_manager/wifi_manager.py /pyboard/lib/wifi_manager/
 cp main.py /pyboard
 cp boot.py /pyboard
 # around 40kB
