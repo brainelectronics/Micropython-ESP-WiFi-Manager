@@ -81,7 +81,9 @@ upip.install('micropython-esp-wifi-manager')
 # upip.install('utemplate')
 ```
 
-#### rshell
+#### Manually
+
+##### Upload files to board
 
 Copy the module(s) to the MicroPython board and import them as shown below
 using [Remote MicroPython shell][ref-remote-upy-shell]
@@ -120,24 +122,47 @@ cp boot.py /pyboard
 # around 40kB
 ```
 
-##### Open REPL in rshell
+##### Install additional MicroPython packages
 
-Call `repl` in the rshell. Use CTRL+X to leave the repl or CTRL+D for a soft
-reboot of the device
-
-### Install Micropython Packages
-
-Restart ESP device and open the printed IP address in your browser
-
-Close all connection, and start REPL of uPyCraft or other serial connection.
+As this package has not been installed with `upip` additional modules are
+required, which are not part of this repo. To install these modules on the
+device, connect to a network and install them via `upip` as follows
 
 ```python
 import upip
+
 upip.install('picoweb')
 upip.install('utemplate')
 upip.install('micropython-ulogging')
 upip.install('micropython-brainelectronics-helper')
 ```
+
+## Usage
+
+After all files have been transfered or installed open a REPL to the device.
+
+The device will try to load and connect to the configured networks based on an
+encrypted JSON file.
+
+In case no network has been configured or no connection could be established
+to any of the configured networks within the timeout of each 5 seconds an
+AccessPoint at `192.168.4.1` is created.
+
+A simple Picoweb webserver is hosting the webpages to connect to new networks,
+to remove already configured networks from the list of connections to
+establish and to get the latest available networks as JSON.
+
+This is a list of available webpages
+
+| URL | Description |
+|-----|-------------|
+| `/`   | Root index page, to choose from the available pages |
+| `/select` | Select and configure a network |
+| `/configure` | Manage already configured networks |
+| `/scan_result` | JSON of available networks |
+
+To leave from the Webinterface, just press CTRL+C and wait until all threads
+finish running. This takes around 1 second. The device will return to its REPL
 
 <!-- Links -->
 [ref-esptool]: https://github.com/espressif/esptool
