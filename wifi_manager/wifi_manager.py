@@ -2,37 +2,42 @@
 # -*- coding: UTF-8 -*-
 
 """
-main script, do your stuff here, similar to the loop() function on Arduino
+WiFi Manager
+
+Load and connect to configured networks based on an encrypted JSON file.
+
+In case no network has been configured or no connection could be established
+to any of the configured networks within the timeout of each 5 seconds an
+AccessPoint is created.
+
+A simple Picoweb webserver is hosting the webpages to connect to new networks,
+to remove already configured networks from the list of connections to
+establish and to get the latest available networks as JSON
 """
 
 # system packages
 import gc
 import json
 import machine
-# import os
 import _thread
 import time
 import ubinascii
 import ucryptolib
 
-from primitives.message import Message
-# https://github.com/peterhinch/micropython-async/blob/a87bda1b716090da27fd288cc8b19b20525ea20c/v3/primitives/
-
 # pip installed packages
 import picoweb
-# import ulogging as logging
-import ure as re
 # https://github.com/pfalcon/picoweb
-# https://github.com/pfalcon/pycopy-lib/blob/9b8bbae774140563e9be138724de083267f99ff9/logging/
+import ure as re
 
 # custom packages
-from helpers.generic_helper import GenericHelper
-from helpers.led_helper import Neopixel     # Led
-from helpers.path_helper import PathHelper
-from helpers.wifi_helper import WifiHelper
+from be_helpers import GenericHelper
+from be_helpers import Message
+from be_helpers import Neopixel
+from be_helpers import PathHelper
+from be_helpers import WifiHelper
 
-# not natively supported on micropython, see lib/typing.py
-from typing import List, Union
+# typing not natively supported on micropython
+from be_helpers import List, Union
 
 
 class WiFiManager(object):
