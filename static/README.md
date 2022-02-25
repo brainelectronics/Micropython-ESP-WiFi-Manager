@@ -1,10 +1,10 @@
 # Static webpage files
 
-JavaScript and CSS files for simulation
+JavaScript and CSS files
 
 ## General
 
-This simulation uses [bootstrap 5.1.3][ref-bootstrap]
+This package and the simulation uses [bootstrap 5.1.3][ref-bootstrap]
 
 ## Create compressed version
 

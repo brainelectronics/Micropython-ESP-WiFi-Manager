@@ -11,7 +11,7 @@ import network
 import time
 
 # custom packages
-from helpers.led_helper import Led
+from be_helpers.led_helper import Led
 
 
 # set clock speed to 240MHz instead of default 160MHz
@@ -27,8 +27,9 @@ led.turn_on()
 station = network.WLAN(network.STA_IF)
 if station.active() and station.isconnected():
     station.disconnect()
+    time.sleep(1)
 station.active(False)
-time.sleep_ms(1000)
+time.sleep(1)
 station.active(True)
 
 led.turn_off()

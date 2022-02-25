@@ -2,7 +2,17 @@
 # -*- coding: UTF-8 -*-
 
 """
-main script, do your stuff here, similar to the loop() function on Arduino
+WiFi Manager
+
+Load and connect to configured networks based on an encrypted JSON file.
+
+In case no network has been configured or no connection could be established
+to any of the configured networks within the timeout of each 5 seconds an
+AccessPoint is created.
+
+A simple Picoweb webserver is hosting the webpages to connect to new networks,
+to remove already configured networks from the list of connections to
+establish and to get the latest available networks as JSON
 """
 
 # system packages
@@ -10,7 +20,6 @@ from Crypto.Cipher import AES
 import gc
 import json
 from machine import machine
-# import os
 from pathlib import Path
 import _thread
 import time
@@ -25,7 +34,7 @@ from flask import Flask, render_template, url_for, redirect, request, jsonify, m
 
 # custom packages
 from generic_helper import GenericHelper
-from led_helper import Neopixel     # Led
+from led_helper import Neopixel
 from path_helper import PathHelper
 from wifi_helper import WifiHelper
 
@@ -44,7 +53,7 @@ class WiFiManager(object):
 
         flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
         template_folder = flask_root_folder / 'templates'
-        static_folder = flask_root_folder / 'static'
+        static_folder = (flask_root_folder / '..' / 'static').resolve()
         self.app = Flask(name,
                          template_folder=template_folder,
                          static_folder=static_folder)
@@ -75,8 +84,8 @@ class WiFiManager(object):
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
 
-        # finally start the WiFi scanning thread
-        self.scanning = True
+        # start the WiFi scanning thread as soon as "start_config" is called
+        self.scanning = False
 
     def load_and_connect(self) -> bool:
         """
@@ -148,8 +157,21 @@ class WiFiManager(object):
         ifconfig = self.wh.ifconfig_ap
         self.logger.debug(ifconfig)
 
+        # start scanning for available networks
+        self.scanning = True
+
         # finally
         self.run(port=80, debug=True)
+
+        self.logger.debug('Finished running the PicoWeb application')
+        self.scanning = False
+        self.logger.debug('Stopped scanning thread')
+
+        # wait some time to end all threads savely
+        time.sleep(5)
+
+        # gc.collect()
+        self.logger.debug('Goodbye from WiFiManager')
 
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
@@ -357,10 +379,10 @@ class WiFiManager(object):
                 found_nets = wh.get_wifi_networks_sorted(rescan=True,
                                                          scan_if_empty=True)
 
+                msg.set(found_nets)
+
                 # wait for specified time
                 time.sleep(scan_interval / 1000.0)
-
-                msg.set(found_nets)
             except KeyboardInterrupt:
                 break
 
@@ -689,9 +711,10 @@ class WiFiManager(object):
             file_path += '.gz'
             headers += b'Content-Encoding: gzip\r\n'
 
+        complete_file_path = file_path
         self.logger.debug('Accessed file {}'.format(file_path))
         return self.sendfile(writer=request,
-                             fname=file_path,
+                             fname=complete_file_path,
                              content_type='text/css',
                              headers=headers)
 
@@ -712,7 +735,7 @@ class WiFiManager(object):
         :param      writer:        The writer
         :type       writer:        Optional
         """
-        flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
+        flask_root_folder = (Path(__file__).parent / '..' / '..' / '..').resolve()
         file_path = str(flask_root_folder) + str(fname)
 
         self.logger.debug('Open file {}'.format(file_path))
