@@ -711,9 +711,10 @@ class WiFiManager(object):
             file_path += '.gz'
             headers += b'Content-Encoding: gzip\r\n'
 
+        complete_file_path = file_path
         self.logger.debug('Accessed file {}'.format(file_path))
         return self.sendfile(writer=request,
-                             fname=file_path,
+                             fname=complete_file_path,
                              content_type='text/css',
                              headers=headers)
 
