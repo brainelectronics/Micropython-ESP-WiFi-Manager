@@ -25,22 +25,29 @@ import _thread
 import time
 # import ubinascii
 # import ucryptolib
-from typing import List, Union
 
-from generic_helper import Message
 
 # pip installed packages
 from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
 
 # custom packages
 from generic_helper import GenericHelper
+from generic_helper import Message
 from led_helper import Neopixel
 from path_helper import PathHelper
 from wifi_helper import WifiHelper
 
+# typing natively supported on python
+from typing import List, Union
+
 
 class WiFiManager(object):
     """docstring for WiFiManager"""
+    ERROR = 0
+    SUCCESS = 1
+    CONNECTION_ISSUE_TIMEOUT = 1
+    CONNECTION_ISSUE_NOT_CONFIGURED = 2
+
     def __init__(self, logger=None, quiet=False, name=__name__):
         # setup and configure logger if none is provided
         if logger is None:
@@ -64,6 +71,7 @@ class WiFiManager(object):
 
         self.event_sinks = set()
 
+        self._available_urls = dict()
         self._add_app_routes()
 
         # other setup and init here
@@ -75,6 +83,8 @@ class WiFiManager(object):
 
         self._configured_networks = list()
         self._selected_network_bssid = ''
+        self._connection_timeout = 5
+        self._connection_result = self.ERROR
 
         # WiFi scan specific defines
         self._scan_lock = _thread.allocate_lock()
@@ -86,6 +96,64 @@ class WiFiManager(object):
 
         # start the WiFi scanning thread as soon as "start_config" is called
         self.scanning = False
+
+    @property
+    def available_urls(self) -> dict:
+        """
+        Get public available URLs.
+
+        :returns:   Dict of available URLs as keys and description as values
+        :rtype:     dict
+        """
+        return self._available_urls
+
+    @available_urls.setter
+    def available_urls(self, value: dict) -> None:
+        """
+        Set public available URLs.
+
+        This is used to render the index page content
+
+        :param      value:  New URL for index page
+        :type       value:  Dict
+        """
+        if isinstance(value, dict):
+            self._available_urls.update(value)
+
+    @property
+    def connection_timeout(self) -> int:
+        """
+        Get the WiFi connection timeout in seconds.
+
+        :returns:   Timeout if WiFi connection can not be established within
+        :rtype:     int
+        """
+        return self._connection_timeout
+
+    @connection_timeout.setter
+    def connection_timeout(self, value: int) -> None:
+        """
+        Set the WiFi connection timeout in seconds.
+
+        Values below 3 sec are set to 3 sec.
+
+        :param      value:  Timeout of WiFi connection per network in seconds
+        :type       value:  int
+        """
+        if isinstance(value, int):
+            if value < 3:
+                value = 3
+            self._connection_timeout = value
+
+    @property
+    def connection_result(self) -> int:
+        """
+        Get connection issue error code
+
+        :returns:   Connection issue error
+        :rtype:     int
+        """
+        return self._connection_result
 
     def load_and_connect(self) -> bool:
         """
@@ -138,11 +206,15 @@ class WiFiManager(object):
             self.logger.info('Connecting to loaded network config...')
             result = WifiHelper.connect(ssid=ssids,
                                         password=passwords,
-                                        timeout=5,
+                                        timeout=self.connection_timeout,
                                         reconnect=False)
             self.logger.debug('Result of connection: {}'.format(result))
+
+            if result is False:
+                self._connection_result = self.CONNECTION_ISSUE_TIMEOUT
         else:
             self.logger.debug('WiFi config file does not (yet) exist')
+            self._connection_result = self.CONNECTION_ISSUE_NOT_CONFIGURED
 
         return result
 
@@ -162,6 +234,7 @@ class WiFiManager(object):
 
         # finally
         self.run(port=80, debug=True)
+        # self.run(host=ifconfig.ip, port=80, debug=True)
 
         self.logger.debug('Finished running the PicoWeb application')
         self.scanning = False
@@ -195,6 +268,13 @@ class WiFiManager(object):
         # regex not supported in Flask
         # self.app.add_url_rule(re.compile('^\/(.+\.css)$'),
         #                       view_func=self.styles)
+
+        available_urls = {
+            "/select": "Select WiFi network",
+            "/configure": "Manage WiFi networks",
+            "/scan_result": "Latest Scan result",
+        }
+        self.available_urls = available_urls
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
@@ -462,6 +542,24 @@ class WiFiManager(object):
                          format(latest_scan_result))
         return latest_scan_result
 
+    def _render_index_page(self, available_pages: dict) -> str:
+        """
+        Render HTML list of available pages
+
+        :param      available_pages:    All available pages
+        :type       available_pages:    dict
+
+        :returns:   Sub content of landing page
+        :rtype:     str
+        """
+        content = ""
+        for url, description in available_pages.items():
+            content += """
+            <a href="{url}" class="list-group-item list-group-item-action">{description}</a>
+            """.format(url=url, description=description)
+
+        return content
+
     def _render_network_inputs(self,
                                available_nets: dict,
                                selected_bssid: str = '') -> str:
@@ -614,15 +712,23 @@ class WiFiManager(object):
 
     # @app.route('/landing_page')
     def landing_page(self):
-        """Provide landing aka index page"""
-        return render_template('index.tpl.html')
+        """
+        Provide landing page aka index page
 
-    # @app.route('/scan_result')
+        List of available subpages is rendered from all elements of the
+        @see available_urls property
+        """
+        available_pages = self.available_urls
+        content = self._render_index_page(available_pages)
+
+        return render_template('index.tpl.html', content=content)
+
+    # @app.route("/scan_result")
     def scan_result(self):
         """Provide latest found networks as JSON"""
         return jsonify(self.latest_scan)
 
-    # @app.route('/select')
+    # @app.route("/select")
     def wifi_selection(self):
         """
         Provide webpage to select WiFi network from list of available networks
@@ -643,7 +749,7 @@ class WiFiManager(object):
 
         return render_template('select.tpl.html', content=content)
 
-    # @app.route('/render_network_inputs')
+    # @app.route("/render_network_inputs")
     def render_network_inputs(self) -> str:
         """Return rendered network inputs content to webpage"""
         available_nets = self.latest_scan
@@ -652,7 +758,7 @@ class WiFiManager(object):
                                               selected_bssid=selected_bssid)
         return content
 
-    # @app.route('/configure')
+    # @app.route("/configure")
     def wifi_configs(self):
         """Provide webpage with table of configured networks"""
         configured_nets = self.configured_networks
@@ -667,7 +773,7 @@ class WiFiManager(object):
                                wifi_nets=configured_nets,
                                button_mode='disabled')
 
-    # @app.route('/save_wifi_config', methods=['POST', 'GET'])
+    # @app.route("/save_wifi_config", methods=['POST', 'GET'])
     def save_wifi_config(self):
         form_data = dict(request.form)
 
@@ -683,7 +789,7 @@ class WiFiManager(object):
 
         return redirect(url_for('landing_page'))
 
-    # @app.route('/remove_wifi_config', methods=['POST', 'GET'])
+    # @app.route("/remove_wifi_config, methods=['POST', 'GET'])
     def remove_wifi_config(self):
         """Remove a configured WiFi network"""
         form_data = dict(request.form)
@@ -712,7 +818,9 @@ class WiFiManager(object):
             headers += b'Content-Encoding: gzip\r\n'
 
         complete_file_path = file_path
-        self.logger.debug('Accessed file {}'.format(file_path))
+        self.logger.debug('Accessed file {}'.format(complete_file_path))
+        self.logger.warning('Connection result: {}'.
+                            format(self._connection_result))
         return self.sendfile(writer=request,
                              fname=complete_file_path,
                              content_type='text/css',
@@ -781,9 +889,6 @@ class WiFiManager(object):
 
 
 if __name__ == "__main__":
-    # app.run()
-    # app.run(debug=True)
-    # app.run(host=host, port=port, debug=debug)
     wm = WiFiManager(logger=None, quiet=False)
     result = wm.load_and_connect()
     print('Result of load_and_connect: {}'.format(result))
