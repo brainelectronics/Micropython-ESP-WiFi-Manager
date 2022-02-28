@@ -26,7 +26,6 @@ import time
 # import ubinascii
 # import ucryptolib
 
-
 # pip installed packages
 from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
 
@@ -553,7 +552,7 @@ class WiFiManager(object):
         :rtype:     str
         """
         content = ""
-        for url, description in available_pages.items():
+        for url, description in sorted(available_pages.items(), key=lambda item: item[1]):
             content += """
             <a href="{url}" class="list-group-item list-group-item-action">{description}</a>
             """.format(url=url, description=description)

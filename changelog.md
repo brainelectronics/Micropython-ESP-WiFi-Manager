@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The list of available pages at the landing page is rendered from the
-  elements of the `available_urls` property by `_render_index_page`
+  elements of the `available_urls` property by `_render_index_page` in
+  alphabetic order
 - `WifiHelper` connects with defined `connection_timeout` to all networks
 
 ### Removed
