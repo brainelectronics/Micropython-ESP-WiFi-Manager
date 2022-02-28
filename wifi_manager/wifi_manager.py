@@ -42,6 +42,11 @@ from be_helpers.typing import List, Union
 
 class WiFiManager(object):
     """docstring for WiFiManager"""
+    ERROR = 0
+    SUCCESS = 1
+    CONNECTION_ISSUE_TIMEOUT = 1
+    CONNECTION_ISSUE_NOT_CONFIGURED = 2
+
     def __init__(self, logger=None, quiet=False, name=__name__):
         # setup and configure logger if none is provided
         if logger is None:
@@ -59,6 +64,7 @@ class WiFiManager(object):
 
         self.event_sinks = set()
 
+        self._available_urls = dict()
         self._add_app_routes()
 
         # other setup and init here
@@ -70,6 +76,8 @@ class WiFiManager(object):
 
         self._configured_networks = list()
         self._selected_network_bssid = ''
+        self._connection_timeout = 5
+        self._connection_result = self.ERROR
 
         # WiFi scan specific defines
         self._scan_lock = _thread.allocate_lock()
@@ -81,6 +89,64 @@ class WiFiManager(object):
 
         # start the WiFi scanning thread as soon as "start_config" is called
         self.scanning = False
+
+    @property
+    def available_urls(self) -> dict:
+        """
+        Get public available URLs.
+
+        :returns:   Dict of available URLs as keys and description as values
+        :rtype:     dict
+        """
+        return self._available_urls
+
+    @available_urls.setter
+    def available_urls(self, value: dict) -> None:
+        """
+        Set public available URLs.
+
+        This is used to render the index page content
+
+        :param      value:  New URL for index page
+        :type       value:  Dict
+        """
+        if isinstance(value, dict):
+            self._available_urls.update(value)
+
+    @property
+    def connection_timeout(self) -> int:
+        """
+        Get the WiFi connection timeout in seconds.
+
+        :returns:   Timeout if WiFi connection can not be established within
+        :rtype:     int
+        """
+        return self._connection_timeout
+
+    @connection_timeout.setter
+    def connection_timeout(self, value: int) -> None:
+        """
+        Set the WiFi connection timeout in seconds.
+
+        Values below 3 sec are set to 3 sec.
+
+        :param      value:  Timeout of WiFi connection per network in seconds
+        :type       value:  int
+        """
+        if isinstance(value, int):
+            if value < 3:
+                value = 3
+            self._connection_timeout = value
+
+    @property
+    def connection_result(self) -> int:
+        """
+        Get connection issue error code
+
+        :returns:   Connection issue error
+        :rtype:     int
+        """
+        return self._connection_result
 
     def load_and_connect(self) -> bool:
         """
@@ -134,11 +200,15 @@ class WiFiManager(object):
             self.logger.info('Connecting to loaded network config...')
             result = WifiHelper.connect(ssid=ssids,
                                         password=passwords,
-                                        timeout=5,
+                                        timeout=self.connection_timeout,
                                         reconnect=False)
             self.logger.debug('Result of connection: {}'.format(result))
+
+            if result is False:
+                self._connection_result = self.CONNECTION_ISSUE_TIMEOUT
         else:
             self.logger.debug('WiFi config file does not (yet) exist')
+            self._connection_result = self.CONNECTION_ISSUE_NOT_CONFIGURED
 
         return result
 
@@ -189,6 +259,13 @@ class WiFiManager(object):
 
         self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'),
                               func=self.styles)
+
+        available_urls = {
+            "/select": "Select WiFi network",
+            "/configure": "Manage WiFi networks",
+            "/scan_result": "Latest Scan result",
+        }
+        self.available_urls = available_urls
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
         """
@@ -458,6 +535,24 @@ class WiFiManager(object):
                          format(latest_scan_result))
         return latest_scan_result
 
+    def _render_index_page(self, available_pages: dict) -> str:
+        """
+        Render HTML list of available pages
+
+        :param      available_pages:    All available pages
+        :type       available_pages:    dict
+
+        :returns:   Sub content of landing page
+        :rtype:     str
+        """
+        content = ""
+        for url, description in sorted(available_pages.items(), key=lambda item: item[1]):
+            content += """
+            <a href="{url}" class="list-group-item list-group-item-action">{description}</a>
+            """.format(url=url, description=description)
+
+        return content
+
     def _render_network_inputs(self,
                                available_nets: dict,
                                selected_bssid: str = '') -> str:
@@ -610,10 +705,19 @@ class WiFiManager(object):
 
     # @app.route('/landing_page')
     def landing_page(self, req, resp) -> None:
+        """
+        Provide landing page aka index page
+
+        List of available subpages is rendered from all elements of the
+        @see available_urls property
+        """
+        available_pages = self.available_urls
+        content = self._render_index_page(available_pages)
+
         yield from picoweb.start_response(resp)
         yield from self.app.render_template(writer=resp,
                                             tmpl_name='index.tpl',
-                                            args=(req, ))
+                                            args=(req, content, ))
 
     # @app.route("/scan_result")
     def scan_result(self, req, resp) -> None:
@@ -724,7 +828,7 @@ class WiFiManager(object):
     # @app.route(re.compile('^\/(.+\.css)$'))
     def styles(self, req, resp) -> None:
         """
-        Send gzipped content if supported by client.
+        Send gzipped CSS content if supported by client.
         Shows specifying headers as a flat binary string, more efficient if
         such headers are static.
         """

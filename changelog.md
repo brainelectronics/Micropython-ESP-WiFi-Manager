@@ -14,6 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.1.0] - 2022-02-27
+### Added
+- Property `connection_timeout` to control WiFi connection timeout instead of
+  default fixed 5 seconds
+- Property `connection_result` to get reason for failed connection
+- Badges in [`README`](README.md) for number of downloads, latest release and
+  license info
+
+### Changed
+- The list of available pages at the landing page is rendered from the
+  elements of the `available_urls` property by `_render_index_page` in
+  alphabetic order
+- `WifiHelper` connects with defined `connection_timeout` to all networks
+
+### Removed
+- Primitives folder no longer used, files are part of
+  [brainelectronics MicroPython helpers][ref-be-micropython-module] which is
+  an install dependency to this package
+
 ## [1.0.0] - 2022-02-25
 ### Added
 - [`setup.py`](setup.py) and [`sdist_upip.py`](sdist_upip.py) taken from
@@ -40,8 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MicroPython helpers module no longer used, replaced by pip install
   requirement
 - Lib of dependency modules no longer used
-- Primitives folder no longer used, files are part of
-  [brainelectronics MicroPython helpers][ref-be-micropython-module]
 - Unused `style.css` from [`static`](static)
 
 ## [0.1.1] - 2022-02-19
@@ -95,8 +112,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.0.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.1.0...develop
 
+[1.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.1.0
 [1.0.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
