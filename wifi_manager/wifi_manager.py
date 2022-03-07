@@ -444,7 +444,7 @@ class WiFiManager(object):
         :param      lock:           The lock object
         :type       lock:           _thread.lock
         """
-        pixel.fading = True
+        # pixel.fading = True
 
         while lock.locked():
             try:
@@ -459,7 +459,7 @@ class WiFiManager(object):
             except KeyboardInterrupt:
                 break
 
-        pixel.fading = False
+        # pixel.fading = False
         print('Finished scanning')
 
     @property
@@ -527,9 +527,6 @@ class WiFiManager(object):
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
-        gc.collect()
-        free = gc.mem_free()
-        self.logger.debug('Free memory: {}'.format(free))
         latest_scan_result = self._scan_net_msg.value()
         self.logger.info('Requested latest scan result: {}'.
                          format(latest_scan_result))
@@ -850,7 +847,8 @@ class WiFiManager(object):
     def run(self,
             host: str = '0.0.0.0',
             port: int = 80,
-            debug: bool = False) -> None:
+            debug: bool = False,
+            log=None) -> None:
         """
         Run the web application
 
@@ -861,6 +859,8 @@ class WiFiManager(object):
         :param      debug:  Flag to automatically reload for code changes and
                             show debugger content
         :type       debug:  bool, optional
+        :param      log:    Logger of Picoweb
+        :type       log:    logging.Logger
         """
         self.logger.debug('Run app on {}:{} with debug: {}'.format(host,
                                                                    port,
@@ -868,7 +868,7 @@ class WiFiManager(object):
         try:
             # self.app.run()
             # self.app.run(debug=debug)
-            self.app.run(host=host, port=port, debug=debug)
+            self.app.run(host=host, port=port, debug=debug, log=log)
         except KeyboardInterrupt:
             self.logger.debug('Catched KeyboardInterrupt at run of web app')
         except Exception as e:
