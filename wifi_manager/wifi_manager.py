@@ -527,10 +527,6 @@ class WiFiManager(object):
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
-        # gc.collect()
-        # free = gc.mem_free()
-        # self.logger.debug('Free memory: {}'.format(free))
-
         latest_scan_result = self._scan_net_msg.value()
         self.logger.info('Requested latest scan result: {}'.
                          format(latest_scan_result))
