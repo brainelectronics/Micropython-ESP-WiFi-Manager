@@ -444,7 +444,7 @@ class WiFiManager(object):
         :param      lock:           The lock object
         :type       lock:           _thread.lock
         """
-        pixel.fading = True
+        # pixel.fading = True
 
         while lock.locked():
             try:
@@ -459,7 +459,7 @@ class WiFiManager(object):
             except KeyboardInterrupt:
                 break
 
-        pixel.fading = False
+        # pixel.fading = False
         print('Finished scanning')
 
     @property
