@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.2.0] - 2022-03-06
+### Added
+- Custom logger can be provided to `run` function to enable different logging
+  levels of Picoweb other than `DEBUG`
+
+### Changed
+- Neopixel is no longer fading while scan thread is running to reduce CPU load
+- `gc.collect()` is no longer called on `latest_scan` property access
+
 ## [1.1.0] - 2022-02-27
 ### Added
 - Property `connection_timeout` to control WiFi connection timeout instead of
@@ -112,8 +121,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.1.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.2.0...develop
 
+[1.2.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.2.0
 [1.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.1.0
 [1.0.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
