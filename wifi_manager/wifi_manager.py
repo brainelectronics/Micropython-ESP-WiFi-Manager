@@ -850,7 +850,8 @@ class WiFiManager(object):
     def run(self,
             host: str = '0.0.0.0',
             port: int = 80,
-            debug: bool = False) -> None:
+            debug: bool = False,
+            log=None) -> None:
         """
         Run the web application
 
@@ -861,6 +862,8 @@ class WiFiManager(object):
         :param      debug:  Flag to automatically reload for code changes and
                             show debugger content
         :type       debug:  bool, optional
+        :param      log:    Logger of Picoweb
+        :type       log:    logging.Logger
         """
         self.logger.debug('Run app on {}:{} with debug: {}'.format(host,
                                                                    port,
@@ -868,7 +871,7 @@ class WiFiManager(object):
         try:
             # self.app.run()
             # self.app.run(debug=debug)
-            self.app.run(host=host, port=port, debug=debug)
+            self.app.run(host=host, port=port, debug=debug, log=log)
         except KeyboardInterrupt:
             self.logger.debug('Catched KeyboardInterrupt at run of web app')
         except Exception as e:
