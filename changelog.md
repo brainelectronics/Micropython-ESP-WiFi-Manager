@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.3.0] - 2022-03-11
+### Changed
+- Index page uses cards instead of list to show available pages
+- Available URLs dictionary used `text`, `title` and `color` keys per URL to
+  style the cards as required
+- Loading spinner is shown on index page to avoid showing a not fully rendered
+  or styled webpage
+
 ## [1.2.0] - 2022-03-06
 ### Added
 - Custom logger can be provided to `run` function to enable different logging
@@ -121,8 +129,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.2.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.3.0...develop
 
+[1.3.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.3.0
 [1.2.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.2.0
 [1.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.1.0
 [1.0.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.0.0
