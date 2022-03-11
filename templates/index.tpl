@@ -21,12 +21,9 @@
   <div id="overlay" class="overlay">
     <div id="loader" class="loader"></div>
   </div>
-  <div style="display:none;" id="container" class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
-    <div class="list-group text-center">
-      <a href="/" class="list-group-item list-group-item-action active">This page</a>
-      {{content}}
-    </div>
-  </div>
+  <div style="display:none;" id="container" class="container"><div class="row">
+    {{content}}
+  </div></div>
   <script>
     window.onload = function(e) {
       setTimeout(showPage, 1000);
