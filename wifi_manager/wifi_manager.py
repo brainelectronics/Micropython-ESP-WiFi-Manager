@@ -261,10 +261,23 @@ class WiFiManager(object):
                               func=self.styles)
 
         available_urls = {
-            "/select": "Select WiFi network",
-            "/configure": "Manage WiFi networks",
-            "/scan_result": "Latest Scan result",
+            "/select": {
+                "title": "Select WiFi",
+                "color": "border-primary",
+                "text": "Configure WiFi networks",
+            },
+            "/configure": {
+                "title": "Manage WiFi networks",
+                "color": "border-primary",
+                "text": "Remove credentials of configured WiFi networks",
+            },
+            "/scan_result": {
+                "title": "Scan data",
+                "color": "text-white bg-info",
+                "text": "Latest WiFi scan data as JSON",
+            }
         }
+
         self.available_urls = available_urls
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
@@ -543,10 +556,15 @@ class WiFiManager(object):
         :rtype:     str
         """
         content = ""
-        for url, description in sorted(available_pages.items(), key=lambda item: item[1]):
+
+        # sort dict by 'title' of the dict values
+        for url, info in sorted(available_pages.items(),
+                                key=lambda item: item[1]['title']):
             content += """
-            <a href="{url}" class="list-group-item list-group-item-action">{description}</a>
-            """.format(url=url, description=description)
+            <div class="col-sm-4 py-2"><div class="card h-100 {color}"><div class="card-body">
+                <h3 class="card-title">{title}</h3><p class="card-text">{text}</p>
+                <a href="{url}" class="stretched-link"></a></div></div></div>
+            """.format(color=info['color'], title=info['title'], text=info['text'], url=url)
 
         return content
 
