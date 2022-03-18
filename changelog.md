@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.4.0] - 2022-03-18
+### Changed
+- Scan data is no logger logged with info level on `latest_scan` property
+  access to reduce time before data return
+- Neopixel is no longer used to allow user of lib to use it as desired by its
+  higher level application
+
 ## [1.3.0] - 2022-03-11
 ### Changed
 - Index page uses cards instead of list to show available pages
@@ -129,8 +136,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.3.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.4.0...develop
 
+[1.4.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.4.0
 [1.3.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.3.0
 [1.2.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.2.0
 [1.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.1.0
