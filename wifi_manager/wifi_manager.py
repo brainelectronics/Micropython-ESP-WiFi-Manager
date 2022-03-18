@@ -540,10 +540,13 @@ class WiFiManager(object):
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
-        latest_scan_result = self._scan_net_msg.value()
-        self.logger.info('Requested latest scan result: {}'.
-                         format(latest_scan_result))
-        return latest_scan_result
+        """
+        Get lastest scanned networks.
+
+        :returns:   Dictionary of available networks
+        :rtype:     Union[List[dict], str]
+        """
+        return self._scan_net_msg.value()
 
     def _render_index_page(self, available_pages: dict) -> str:
         """
