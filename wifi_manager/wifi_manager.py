@@ -32,7 +32,6 @@ import ure as re
 # custom packages
 from be_helpers.generic_helper import GenericHelper
 from be_helpers.message import Message
-from be_helpers.led_helper import Neopixel
 from be_helpers.path_helper import PathHelper
 from be_helpers.wifi_helper import WifiHelper
 
@@ -58,9 +57,6 @@ class WiFiManager(object):
 
         self.app = picoweb.WebApp(pkg='/lib')
         self.wh = WifiHelper()
-        self.pixel = Neopixel()
-        self.pixel.color = 'yellow'
-        self.pixel.intensity = 20
 
         self.event_sinks = set()
 
@@ -438,7 +434,6 @@ class WiFiManager(object):
         return self._configured_networks
 
     def _scan(self,
-              pixel: Neopixel,
               wh: WifiHelper,
               msg: Message,
               scan_interval: int,
@@ -446,8 +441,6 @@ class WiFiManager(object):
         """
         Scan for available networks.
 
-        :param      pixel:          Neopixel helper object
-        :type       pixel:          Neopixel
         :param      wh:             Wifi helper object
         :type       wh:             WifiHelper
         :param      msg:            The shared message from this thread
@@ -457,8 +450,6 @@ class WiFiManager(object):
         :param      lock:           The lock object
         :type       lock:           _thread.lock
         """
-        # pixel.fading = True
-
         while lock.locked():
             try:
                 # rescan for available networks
@@ -472,7 +463,6 @@ class WiFiManager(object):
             except KeyboardInterrupt:
                 break
 
-        # pixel.fading = False
         print('Finished scanning')
 
     @property
@@ -525,7 +515,6 @@ class WiFiManager(object):
 
             # parameters of the _scan function
             params = (
-                self.pixel,
                 self.wh,
                 self._scan_net_msg,
                 self._scan_interval,
