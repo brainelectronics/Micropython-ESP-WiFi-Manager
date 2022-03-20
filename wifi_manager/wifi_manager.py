@@ -82,6 +82,7 @@ class WiFiManager(object):
         self._scan_net_msg = Message()
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
+        self._stop_scanning_timer = None
 
         # start the WiFi scanning thread as soon as "start_config" is called
         self.scanning = False
@@ -526,15 +527,40 @@ class WiFiManager(object):
             # stop scanning if not already stopped
             self._scan_lock.release()
             self.logger.info('Scanning stoppped')
+            if isinstance(self._stop_scanning_timer, machine.Timer):
+                self._stop_scanning_timer.deinit()
+
+    def _stop_scanning_cb(self, tim: machine.Timer) -> None:
+        """
+        Timer callback function to stop the WiFi scan thread.
+
+        :param      tim:  The timer calling this function.
+        :type       tim:  machine.Timer
+        """
+        self.scanning = False
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
         """
         Get lastest scanned networks.
 
+        Start scanning if not already scanning, set a oneshot timer to 10.5x
+        of @see scan_interval to stop scanning again in order to reduce CPU
+        load and avoid unused scans
+
         :returns:   Dictionary of available networks
         :rtype:     Union[List[dict], str]
         """
+        if not self.scanning:
+            self.scanning = True
+
+            if self._stop_scanning_timer is None:
+                self._stop_scanning_timer = machine.Timer(-1)
+            cb_period = int(self.scan_interval * 10 + self.scan_interval / 2)
+            self._stop_scanning_timer.init(mode=machine.Timer.ONE_SHOT,
+                                           period=cb_period,
+                                           callback=self._stop_scanning_cb)
+
         return self._scan_net_msg.value()
 
     def _render_index_page(self, available_pages: dict) -> str:
