@@ -32,7 +32,6 @@ import ure as re
 # custom packages
 from be_helpers.generic_helper import GenericHelper
 from be_helpers.message import Message
-from be_helpers.led_helper import Neopixel
 from be_helpers.path_helper import PathHelper
 from be_helpers.wifi_helper import WifiHelper
 
@@ -58,9 +57,6 @@ class WiFiManager(object):
 
         self.app = picoweb.WebApp(pkg='/lib')
         self.wh = WifiHelper()
-        self.pixel = Neopixel()
-        self.pixel.color = 'yellow'
-        self.pixel.intensity = 20
 
         self.event_sinks = set()
 
@@ -86,6 +82,7 @@ class WiFiManager(object):
         self._scan_net_msg = Message()
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
+        self._stop_scanning_timer = None
 
         # start the WiFi scanning thread as soon as "start_config" is called
         self.scanning = False
@@ -438,7 +435,6 @@ class WiFiManager(object):
         return self._configured_networks
 
     def _scan(self,
-              pixel: Neopixel,
               wh: WifiHelper,
               msg: Message,
               scan_interval: int,
@@ -446,8 +442,6 @@ class WiFiManager(object):
         """
         Scan for available networks.
 
-        :param      pixel:          Neopixel helper object
-        :type       pixel:          Neopixel
         :param      wh:             Wifi helper object
         :type       wh:             WifiHelper
         :param      msg:            The shared message from this thread
@@ -457,8 +451,6 @@ class WiFiManager(object):
         :param      lock:           The lock object
         :type       lock:           _thread.lock
         """
-        # pixel.fading = True
-
         while lock.locked():
             try:
                 # rescan for available networks
@@ -472,7 +464,6 @@ class WiFiManager(object):
             except KeyboardInterrupt:
                 break
 
-        # pixel.fading = False
         print('Finished scanning')
 
     @property
@@ -525,7 +516,6 @@ class WiFiManager(object):
 
             # parameters of the _scan function
             params = (
-                self.pixel,
                 self.wh,
                 self._scan_net_msg,
                 self._scan_interval,
@@ -537,13 +527,41 @@ class WiFiManager(object):
             # stop scanning if not already stopped
             self._scan_lock.release()
             self.logger.info('Scanning stoppped')
+            if isinstance(self._stop_scanning_timer, machine.Timer):
+                self._stop_scanning_timer.deinit()
+
+    def _stop_scanning_cb(self, tim: machine.Timer) -> None:
+        """
+        Timer callback function to stop the WiFi scan thread.
+
+        :param      tim:  The timer calling this function.
+        :type       tim:  machine.Timer
+        """
+        self.scanning = False
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
-        latest_scan_result = self._scan_net_msg.value()
-        self.logger.info('Requested latest scan result: {}'.
-                         format(latest_scan_result))
-        return latest_scan_result
+        """
+        Get lastest scanned networks.
+
+        Start scanning if not already scanning, set a oneshot timer to 10.5x
+        of @see scan_interval to stop scanning again in order to reduce CPU
+        load and avoid unused scans
+
+        :returns:   Dictionary of available networks
+        :rtype:     Union[List[dict], str]
+        """
+        if not self.scanning:
+            self.scanning = True
+
+            if self._stop_scanning_timer is None:
+                self._stop_scanning_timer = machine.Timer(-1)
+            cb_period = int(self.scan_interval * 10 + self.scan_interval / 2)
+            self._stop_scanning_timer.init(mode=machine.Timer.ONE_SHOT,
+                                           period=cb_period,
+                                           callback=self._stop_scanning_cb)
+
+        return self._scan_net_msg.value()
 
     def _render_index_page(self, available_pages: dict) -> str:
         """

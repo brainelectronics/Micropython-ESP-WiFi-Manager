@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
+## [1.4.0] - 2022-03-20
+### Added
+- Virtual oneshot timer is created and started on `latest_scan` property
+  access to stop the scanning thread again after 10.5x of `scan_interval`.
+  This reduces CPU load and avoids unused scans.
+
+### Changed
+- Scanning thread is started  on `latest_scan` property access
+- Scan data is no logger logged with info level on `latest_scan` property
+  access to reduce time before data return, see [#11][ref-issue-11]
+- Neopixel is no longer used to allow user of lib to use it as desired by its
+  higher level application
+
 ## [1.3.0] - 2022-03-11
 ### Changed
 - Index page uses cards instead of list to show available pages
@@ -129,8 +142,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.3.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.4.0...develop
 
+[1.4.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.4.0
 [1.3.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.3.0
 [1.2.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.2.0
 [1.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.1.0
@@ -138,6 +152,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
 
+[ref-issue-11]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/11
 [ref-pypi]: https://pypi.org/
 [ref-pfalcon-picoweb-sdist-upip]: https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/sdist_upip.py
 [ref-be-micropython-module]: https://github.com/brainelectronics/micropython-modules/tree/1.1.0
