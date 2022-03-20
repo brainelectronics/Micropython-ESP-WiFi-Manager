@@ -14,8 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## [Unreleased]
-## [1.4.0] - 2022-03-18
+## [1.4.0] - 2022-03-20
+### Added
+- Virtual oneshot timer is created and started on `latest_scan` property
+  access to stop the scanning thread again after 10.5x of `scan_interval`.
+  This reduces CPU load and avoids unused scans.
+
 ### Changed
+- Scanning thread is started  on `latest_scan` property access
 - Scan data is no logger logged with info level on `latest_scan` property
   access to reduce time before data return
 - Neopixel is no longer used to allow user of lib to use it as desired by its
