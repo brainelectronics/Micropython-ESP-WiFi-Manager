@@ -211,8 +211,11 @@ class WiFiManager(object):
 
     def start_config(self) -> None:
         """Start WiFi manager accesspoint and webserver."""
-        self.logger.info('Starting Manager with AccessPoint')
-        result = self.wh.create_ap(ssid='WiFiManager',
+        ap_name = 'WiFiManager_{}'.format(
+            GenericHelper.get_uuid(4).decode('ascii'))
+        self.logger.info('Starting WiFiManager as AccessPoint "{}"'.
+                         format(ap_name))
+        result = self.wh.create_ap(ssid=ap_name,
                                    password='',
                                    channel=11,
                                    timeout=5)
