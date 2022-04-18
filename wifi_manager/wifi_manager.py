@@ -259,6 +259,8 @@ class WiFiManager(object):
 
         self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'),
                               func=self.styles)
+        self.app.add_url_rule(url=re.compile('^\/(.+\.js)$'),
+                              func=self.scripts)
 
         available_urls = {
             "/select": {
@@ -881,6 +883,28 @@ class WiFiManager(object):
         yield from self.app.sendfile(writer=resp,
                                      fname=complete_file_path,
                                      content_type='text/css',
+                                     headers=headers)
+
+    # @app.route(re.compile('^\/(.+\.js)$'))
+    def scripts(self, req, resp) -> None:
+        """
+        Send gzipped JS content if supported by client.
+        Shows specifying headers as a flat binary string, more efficient if
+        such headers are static.
+        """
+        file_path = req.url_match.group(1)
+        headers = b'Cache-Control: max-age=86400\r\n'
+
+        if b'gzip' in req.headers.get(b'Accept-Encoding', b''):
+            self.logger.debug('gzip accepted for JS script file')
+            file_path += '.gz'
+            headers += b'Content-Encoding: gzip\r\n'
+
+        complete_file_path = 'static/js/' + file_path
+        self.logger.debug('Accessed file {}'.format(complete_file_path))
+        yield from self.app.sendfile(writer=resp,
+                                     fname=complete_file_path,
+                                     content_type='text/javascript',
                                      headers=headers)
 
     def run(self,
