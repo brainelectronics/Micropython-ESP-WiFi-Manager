@@ -837,9 +837,8 @@ class WiFiManager(object):
 
         self._save_wifi_config(form_data=form_data)
 
-        # redirect to '/'
-        headers = {'Location': '/'}
-        yield from picoweb.start_response(resp, status='303', headers=headers)
+        # empty response to avoid any redirects or errors due to none response
+        yield from picoweb.start_response(resp, status='204')
 
     # @app.route("/remove_wifi_config")
     def remove_wifi_config(self, req, resp) -> None:
@@ -859,8 +858,8 @@ class WiFiManager(object):
 
         self._remove_wifi_config(form_data=form_data)
 
-        # redirect to '/'
-        headers = {'Location': '/'}
+        # redirect to '/configure'
+        headers = {'Location': '/configure'}
         yield from picoweb.start_response(resp, status='303', headers=headers)
 
     # @app.route(re.compile('^\/(.+\.css)$'))

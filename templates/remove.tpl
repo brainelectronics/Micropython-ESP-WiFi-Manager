@@ -8,9 +8,9 @@
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Remove WiFi Network</title>
   <link href="bootstrap.min.css" rel="stylesheet">
+  <script type="text/javascript" src="toast.js"></script>
   <!--
   <link href="style.css" rel="stylesheet">
-  <link href="bootstrap.min.css" rel="stylesheet">
   <link href="list-groups.css" rel="stylesheet">
   -->
   <style type="text/css">
@@ -72,6 +72,7 @@
     </div>
     </div>
   </div>
+  <div id="alert_container" style="position: fixed;z-index: 9999;top: 20px;right: 20px;"></div>
 
   <script>
     window.onload = function(e) {
@@ -80,28 +81,20 @@
     function showPage() {
       document.getElementById("loader").style.display = "none";
       document.getElementById("myDiv").style.display = "block";
-      //document.getElementById("rcorners3").style.display = "block";
       document.getElementById("overlay").style.display = "none";
     };
     document.getElementById("remove_wifi_config_form").onsubmit = function(e) {
-      window.onbeforeunload = null;
+      createToast('alert-success', 'Success!', 'Network removed', 5000);
       return true;
     };
     const checkboxes = [...document.querySelectorAll('input[type=checkbox]')];
-    function anyChecked() {
-      return checkboxes.some(x=>x.checked);
-    }
+    function anyChecked() {return checkboxes.some(x=>x.checked);}
     checkboxes.forEach(checkbox => {
       checkbox.addEventListener("click", e => {
-        // console.log('Checkbox ' + checkbox.id + ' clicked');
         is_any_checked = anyChecked();
         var button = document.getElementById("save");
-        if(is_any_checked) {
-          button.removeAttribute('disabled');
-        }
-        else {
-          button.setAttribute('disabled','');
-        }
+        if (is_any_checked) {button.removeAttribute('disabled');}
+        else {button.setAttribute('disabled','');}
       })
     })
   </script>
