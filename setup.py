@@ -47,6 +47,8 @@ setup(
             [
                 'static/css/bootstrap.min.css',
                 'static/css/bootstrap.min.css.gz',
+                'static/js/toast.js',
+                'static/js/toast.js.gz',
             ]
         ),
         (
