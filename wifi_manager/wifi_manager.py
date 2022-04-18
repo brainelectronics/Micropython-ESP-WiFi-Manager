@@ -858,7 +858,7 @@ class WiFiManager(object):
 
         self._remove_wifi_config(form_data=form_data)
 
-        # redirect to '/'
+        # redirect to '/configure'
         headers = {'Location': '/configure'}
         yield from picoweb.start_response(resp, status='303', headers=headers)
 
