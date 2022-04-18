@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.7.0] - 2022-04-18
+### Added
+- [`toast.js`](static/js/toast.js) and [`toast.js.gz`](static/js/toast.js.gz)
+  added to show hovering alert banners, see [#21][ref-issue-21]
+- Add toast JavaScript files to [`setup.py`](setup.py) to be part of twine
+  distributions
+
+### Changed
+- `/select` page shows success banner after posting new network config data
+  and does not return to index page anymore. `/configure` page shows success
+  banner after removing a network and redirects to its page instead of
+  returning to the index page, see [#21][ref-issue-21]
+
 ## [1.6.0] - 2022-04-18
 ### Added
 - Routing for JavaScript `.js` files added, see [#18][ref-issue-18]
@@ -159,8 +172,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.6.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.7.0...develop
 
+[1.7.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.0
 [1.6.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.6.0
 [1.5.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.5.0
 [1.4.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.4.0
@@ -171,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
 
+[ref-issue-21]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/21
 [ref-issue-18]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/18
 [ref-issue-19]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/19
 [ref-issue-15]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/15
