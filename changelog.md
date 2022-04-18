@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.6.0] - 2022-04-18
+### Added
+- Routing for JavaScript `.js` files added, see [#18][ref-issue-18]
+
+### Changed
+- Removed source mapping from
+  [`bootstrap.min.css`](static/css/bootstrap.min.css) and the compressed file
+  to avoid issues as the `bootstrap.min.css.map` is not found, see
+  [#19][ref-issue-19]
+
 ## [1.5.0] - 2022-04-16
 ### Changed
 - `start_config` creates an AccessPoint named `WiFiManager_xxxx` with `xxxx`
@@ -149,8 +159,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.5.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.6.0...develop
 
+[1.6.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.6.0
 [1.5.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.5.0
 [1.4.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.4.0
 [1.3.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.3.0
@@ -160,6 +171,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
 
+[ref-issue-18]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/18
+[ref-issue-19]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/19
 [ref-issue-15]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/15
 [ref-issue-11]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/11
 [ref-pypi]: https://pypi.org/
