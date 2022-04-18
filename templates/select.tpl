@@ -8,9 +8,9 @@
   <meta name="author" content="Jonas Scharpf aka brainelectronics">
   <title>Select WiFi</title>
   <link href="bootstrap.min.css" rel="stylesheet">
+  <script type="text/javascript" src="toast.js"></script>
   <!--
   <link href="style.css" rel="stylesheet">
-  <link href="bootstrap.min.css" rel="stylesheet">
   <link href="list-groups.css" rel="stylesheet">
   -->
   <style type="text/css">
@@ -61,40 +61,33 @@
     </div>
     </div>
   </div>
+  <div id="alert_container" style="position: fixed;z-index: 9999;top: 20px;right: 20px;"></div>
 
   <script>
     var selected_bssid = 0;
     window.onload = function(e) {
       setTimeout(showPage, 1000);
       setTimeout(get_new_networks, 100);
-      var myInterval = setInterval(get_new_networks, 10000);
+      setInterval(get_new_networks, 10000);
     };
     function showPage() {
       document.getElementById("loader").style.display = "none";
       document.getElementById("myDiv").style.display = "block";
-      //document.getElementById("rcorners3").style.display = "block";
       document.getElementById("overlay").style.display = "none";
     };
     document.getElementById("save_wifi_config_form").onsubmit = function(e) {
-      window.onbeforeunload = null;
+      createToast('alert-success', 'Success!', 'Network saved', 5000);
       return true;
     };
-    function remember_selected_element(cb) {
-      selected_bssid = cb.id;
-    }
+    function remember_selected_element(cb) {selected_bssid = cb.id;}
     function get_new_networks() {
-      // console.log('Getting new networks');
       var xmlhttp = new XMLHttpRequest();
       var url = "render_network_inputs";
       xmlhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
           var content = this.responseText;
-          // console.log(content);
           document.getElementById("wifi_network").innerHTML = content;
-
-          if (selected_bssid) {
-            document.getElementById(selected_bssid).checked = true;
-          }
+          if (selected_bssid) {document.getElementById(selected_bssid).checked = true;}
         }
       };
       xmlhttp.open("GET", url);
