@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.7.1] - 2022-05-06
+### Fixed
+- `start_config` creates an AccessPoint named `WiFiManager_xxxx` with `xxxx`
+  as the last four instead of first four characters of the UUID of the device,
+  see [#15][ref-issue-15]
+
 ## [1.7.0] - 2022-04-18
 ### Added
 - [`toast.js`](static/js/toast.js) and [`toast.js.gz`](static/js/toast.js.gz)
@@ -172,8 +178,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.7.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.7.1...develop
 
+[1.7.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.1
 [1.7.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.0
 [1.6.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.6.0
 [1.5.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.5.0
