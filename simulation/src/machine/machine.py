@@ -27,3 +27,7 @@ class machine(object):
     @staticmethod
     def unique_id() -> bytes:
         return b'DEADBEEF'
+
+    @staticmethod
+    def freq() -> int:
+        return 160 * 1000 * 1000
