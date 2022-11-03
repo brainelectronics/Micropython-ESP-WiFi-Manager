@@ -20,7 +20,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager',
-    author=__author__,
+    author='brainelectronics',
     author_email='info@brainelectronics.de',
     classifiers=[
         'Development Status :: 4 - Beta',
