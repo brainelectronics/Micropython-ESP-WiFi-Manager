@@ -11,6 +11,197 @@ import time
 from typing import Union
 
 
+class Led(object):
+    """docstring for Led"""
+    def __init__(self, led_pin: int = 4, inverted: bool = True) -> None:
+        """
+        Initialize LED.
+
+        :param      led_pin:   The LED pin
+        :type       led_pin:   int, optional
+        :param      inverted:  Flag whether LED is inverted
+        :type       inverted:  bool, optional
+        """
+        self.led_pin = Pin(led_pin, Pin.OUT)
+
+        self._inverted = inverted
+        self._blink_lock = _thread.allocate_lock()
+        self._blink_delay = 250
+
+    def flash(self, amount: int, delay_ms: int = 50) -> None:
+        """
+        Flash LED for given amount of iterations.
+
+        :param      amount:     The amount of iterations
+        :type       amount:     int
+        :param      delay_ms:   The delay between a flash in milliseconds
+        :type       delay_ms:   int, optional
+        """
+        self.toggle_pin(pin=self.led_pin, amount=amount, delay_ms=delay_ms)
+
+    def blink(self, delay_ms: int = 250) -> None:
+        """
+        LED blinking infinitely. Wrapper around property usage.
+
+        :param      delay_ms:  The delay between pin changes in milliseconds
+        :type       delay_ms:  int, optional
+        """
+        self.blink_delay = delay_ms
+        self.blinking = True
+
+    def _blink(self, delay_ms: int, lock: lock) -> None:    # noqa
+        """
+        Internal blink thread content.
+
+        :param      delay_ms:  The delay between pin changes in milliseconds
+        :type       delay_ms:  int
+        :param      lock:      The lock object
+        :type       lock:      lock
+        """
+        while lock.locked():
+            try:
+                self.state = not self.state
+                # time.sleep_ms(delay_ms)
+                time.sleep(delay_ms / 1000.0)
+            except KeyboardInterrupt:
+                break
+
+        # turn LED finally off
+        self.turn_off()
+
+    @property
+    def blink_delay(self) -> int:
+        """
+        Get the blink delay in milliseconds.
+
+        :returns:   Delay between pin changes in milliseconds
+        :rtype:     int
+        """
+        return self._blink_delay
+
+    @blink_delay.setter
+    def blink_delay(self, delay_ms: int) -> None:
+        """
+        Set the blink delay in milliseconds.
+
+        :param      delay_ms:  The delay between pin changes in milliseconds
+        :type       delay_ms:  int
+        """
+        if delay_ms < 1:
+            delay_ms = 1
+        self._blink_delay = delay_ms
+
+    @property
+    def blinking(self) -> bool:
+        """
+        Get the blinking status.
+
+        :returns:   Flag whether LED is blinking or not
+        :rtype:     bool
+        """
+        return self._blink_lock.locked()
+
+    @blinking.setter
+    def blinking(self, value: bool) -> None:
+        """
+        Start or stop blinking of the LED.
+
+        :param      value:  The value
+        :type       value:  bool
+        """
+        if value and (not self._blink_lock.locked()):
+            # start blinking if not already blinking
+            self._blink_lock.acquire()
+            params = (self.blink_delay, self._blink_lock)
+            _thread.start_new_thread(self._blink, params)
+        elif (value is False) and self._blink_lock.locked():
+            # stop blinking if not already stopped
+            self._blink_lock.release()
+
+    @staticmethod
+    def toggle_pin(pin: Pin, amount: int, delay_ms: int = 50) -> None:
+        """
+        Toggle pin for given amount of iterations.
+
+        :param      pin:        The pin to toggle
+        :type       pin:        Pin
+        :param      amount:     The amount of iterations
+        :type       amount:     int
+        :param      delay_ms:   The delay between a pin change in milliseconds
+        :type       delay_ms:   int, optional
+        """
+        for x in range(1, amount + 1):
+            pin.value(not pin.value())
+            # time.sleep_ms(delay_ms)
+            time.sleep(delay_ms / 1000.0)
+            pin.value(not pin.value())
+            # time.sleep_ms(delay_ms)
+            time.sleep(delay_ms / 1000.0)
+
+    @property
+    def state(self) -> bool:
+        """
+        Get state of LED.
+
+        :returns:   State of LED
+        :rtype:     bool
+        """
+        if self._inverted:
+            return not self.led_pin.value()
+        else:
+            return self.led_pin.value()
+
+    @state.setter
+    def state(self, value: Union[bool, int]) -> None:
+        """
+        Turn LED on or off.
+        """
+        if bool(value) is False:
+            if self._inverted:
+                # HIGH turns LED off in inverted mode
+                self.led_pin.on()
+            else:
+                self.led_pin.off()
+        else:
+            if self._inverted:
+                # LOW turns LED on in inverted mode
+                self.led_pin.off()
+            else:
+                self.led_pin.on()
+
+    def turn_on(self) -> None:
+        """
+        Turn LED on.
+        """
+        self.state = True
+
+    @property
+    def on(self) -> bool:
+        """
+        Return flag whether LED is on
+
+        :returns:   LED state
+        :rtype:     bool
+        """
+        return self.state
+
+    def turn_off(self) -> None:
+        """
+        Turn LED off.
+        """
+        self.state = False
+
+    @property
+    def off(self) -> bool:
+        """
+        Return flag whether LED is off
+
+        :returns:   LED state
+        :rtype:     bool
+        """
+        return not self.state
+
+
 class Neopixel(object):
     """docstring for Neopixel"""
     def __init__(self, neopixel_pin: int = 27, neopixels: int = 1) -> None:
@@ -46,7 +237,10 @@ class Neopixel(object):
             'teal': [0, 30 // 2, 30 // 2],
             'purple': [30 // 2, 0, 30 // 2],
         }
-        self._pwmtable = [0, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10, 11, 13, 16, 19, 23, 27, 32, 38, 45, 54, 64, 76, 91, 108, 128, 152, 181, 215, 255]
+        self._pwmtable = [
+            0, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10, 11, 13, 16, 19, 23, 27, 32,
+            38, 45, 54, 64, 76, 91, 108, 128, 152, 181, 215, 255
+        ]
         self._color = self._colors['red']
         self._intensity = max(self._color)
         self._last_intensity = self._intensity
@@ -76,7 +270,7 @@ class Neopixel(object):
         """
         Set the neopixel color.
 
-        A RGB value can be specified by a list or by setting the individual color.
+        A RGB value can be specified by a list or by setting individual color.
 
         :param      red:    The red brightness
         :type       red:    int, optional
@@ -134,7 +328,9 @@ class Neopixel(object):
         """
         self.set(red=intensity, number=number)
 
-    def green(self, intensity: int = 30, number: Union[int, list] = -1) -> None:
+    def green(self,
+              intensity: int = 30,
+              number: Union[int, list] = -1) -> None:
         """
         Set the Neopixel to green.
 
@@ -303,22 +499,24 @@ class Neopixel(object):
         A fade delay below 30ms is not recommened due to high CPU load.
         REPL might get slow.
 
-        :param      delay_ms:       The delay between intensity changes in milliseconds
+        :param      delay_ms:       Delay between intensity changes in ms
         :type       delay_ms:       int
-        :param      pixel_amount:   Which or how many Neopixel to fade, default is all
+        :param      pixel_amount:   Which or how many Neopixel to fade,
+                                    default is all
         :type       pixel_amount:   int, optional
         """
         self.fade_delay = delay_ms
         self.fade_pixel_amount = pixel_amount
         self.fading = True
 
-    def _fade(self, delay_ms: int, pixel_amount: int, lock: int) -> None:
+    def _fade(self, delay_ms: int, pixel_amount: int, lock: int) -> None:  # noqa
         """
         Internal Neopixel fading thread content.
 
-        :param      delay_ms:       The delay between intensity changes in milliseconds
+        :param      delay_ms:       The delay between intensity changes in ms
         :type       delay_ms:       int
-        :param      pixel_amount:   Which or how many Neopixel to fade, default is all
+        :param      pixel_amount:   Which or how many Neopixel to fade,
+                                    default is all
         :type       pixel_amount:   int, optional
         :param      lock:           The lock object
         :type       lock:           lock
@@ -328,7 +526,8 @@ class Neopixel(object):
 
         # find closest match of maximum_intensity in _pwmtable
         # set this as maximum_intensity
-        closest_match = min(self._pwmtable, key=lambda x: abs(x - maximum_intensity))
+        closest_match = min(self._pwmtable,
+                            key=lambda x: abs(x - maximum_intensity))
         closest_match_index = self._pwmtable.index(closest_match)
 
         while lock.locked():
@@ -366,7 +565,7 @@ class Neopixel(object):
         """
         Set the Neopixel fade delay in milliseconds.
 
-        :param      delay_ms:  The delay between intensity changes in milliseconds
+        :param      delay_ms:  The delay between intensity changes in ms
         :type       delay_ms:  int
         """
         if delay_ms < 1:
