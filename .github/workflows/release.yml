@@ -1,0 +1,43 @@
+# this file is *not* meant to cover or endorse the use of GitHub Actions, but rather to
+# help make automated releases for this project
+
+name: Upload Python Package
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    - name: Install build dependencies
+      run: |
+        if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
+    - name: Build package
+      run: |
+        changelog2version \
+          --changelog_file changelog.md \
+          --version_file wifi_manager/version.py \
+          --version_file_type py \
+          --debug
+        python setup.py sdist
+        rm dist/*.orig
+      # sdist call create non conform twine files *.orig, remove them
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1.5
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        skip_existing: true
+        verbose: true
+        print_hash: true
