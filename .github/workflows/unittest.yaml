@@ -1,0 +1,37 @@
+# this file is *not* meant to cover or endorse the use of GitHub Actions, but rather to
+# help make automated releases for this project
+
+name: Unittest Python Package
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    - name: Execute tests
+      run: |
+        pip install -r requirements-test.txt
+        cd simulation
+        python create_report_dirs.py
+        nose2 --config tests/unittest.cfg
+    - name: Create coverage report
+      run: |
+        cd simulation
+        coverage xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: simulation/reports/coverage/coverage.xml
+        flags: unittests
+        fail_ci_if_error: true
+        # path_to_write_report: ./reports/coverage/codecov_report.txt
+        verbose: true
