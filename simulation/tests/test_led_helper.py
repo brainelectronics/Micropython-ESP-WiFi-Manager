@@ -9,8 +9,77 @@ from typing import Union
 import unittest
 
 # custom imports
-from led_helper import Neopixel
+from led_helper import Led
 from led_helper import NeoPixel
+
+
+class TestLed(unittest.TestCase):
+    def setUp(self) -> None:
+        self.led = Led()
+
+    def tearDown(self) -> None:
+        pass
+
+    def test__init__(self) -> None:
+        """Test initial values"""
+        # check thread specific values
+        # self.assertIsInstance(self.led._fade_lock, _thread.allocate_lock)
+        self.assertEqual(self.led._inverted, True)
+        self.assertEqual(self.led._blink_delay, 250)
+
+    @unittest.skip("Not yet implemented")
+    def flash(self) -> None:
+        """Test flashing LED for given amount of iterations"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_blink(self) -> None:
+        """Test blinking LED infinitely."""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test__blink(self) -> None:
+        """Test internal blink thread content"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_blink_delay(self) -> None:
+        """Test getting the blink delay in milliseconds."""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def blink_delay(self) -> None:
+        """Test setting the the blink delay in milliseconds."""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_blinking(self) -> None:
+        """Test getting the blinking status"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_toggle_pin(self) -> None:
+        """Test toggle pin for given amount of iterations"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_turn_on(self) -> None:
+        """Test turning LED on"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_on(self) -> None:
+        """Test setting and getting state of LED"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_turn_off(self) -> None:
+        """Test turning LED off"""
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test_off(self) -> None:
+        """Test setting and getting state of LED"""
 
 
 class TestNeopixel(unittest.TestCase):
