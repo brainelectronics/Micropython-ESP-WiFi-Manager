@@ -1,0 +1,5 @@
+# List external packages here
+# Avoid fixed versions
+flake8>=5.0.0,<6
+coverage>=6.4.2,<7
+nose2>=0.12.0,<1
