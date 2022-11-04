@@ -27,12 +27,12 @@ import time
 # import ucryptolib
 
 # pip installed packages
-from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
+from flask import Flask, render_template, url_for, redirect, request, \
+    jsonify, make_response
 
 # custom packages
 from generic_helper import GenericHelper
 from generic_helper import Message
-from led_helper import Neopixel
 from path_helper import PathHelper
 from wifi_helper import WifiHelper
 
@@ -58,7 +58,7 @@ class WiFiManager(object):
             GenericHelper.set_level(logger, 'debug')
         self.logger = logger
         self.logger.disabled = quiet
-        self._config_file = (Path(__file__).parent / '..' / '..').resolve() / 'wifi-secure.json'
+        self._config_file = (Path(__file__).parent / '..' / '..').resolve() / 'wifi-secure.json'    # noqa: E501
         print('Config file at: {}'.format(self._config_file))
 
         flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
@@ -855,7 +855,7 @@ class WiFiManager(object):
         self._remove_wifi_config(form_data=form_data)
 
         # redirect to '/configure'
-        headers = {'Location': '/configure'}
+        headers = {'Location': '/configure'}    # noqa: F841
         return redirect(url_for('wifi_configs'))
 
     # @app.route(re.compile('^\/(.+\.css)$'))
@@ -921,7 +921,8 @@ class WiFiManager(object):
         :param      writer:        The writer
         :type       writer:        Optional
         """
-        flask_root_folder = (Path(__file__).parent / '..' / '..' / '..').resolve()
+        here = Path(__file__)
+        flask_root_folder = (here.parent / '..' / '..' / '..').resolve()
         file_path = str(flask_root_folder) + str(fname)
 
         self.logger.debug('Open file {}'.format(file_path))
