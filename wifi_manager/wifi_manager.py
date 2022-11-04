@@ -247,9 +247,9 @@ class WiFiManager(object):
         # @app.route('/index')
         # def index(self, req, resp): pass
         # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L251
-        self.app.add_url_rule(url="/", func=self.landing_page)
+        self.app.add_url_rule(url='/', func=self.landing_page)
         self.app.add_url_rule(url='/select', func=self.wifi_selection)
-        self.app.add_url_rule("/render_network_inputs",
+        self.app.add_url_rule(url='/render_network_inputs',
                               func=self.render_network_inputs)
         self.app.add_url_rule(url='/configure', func=self.wifi_configs)
         self.app.add_url_rule(url='/save_wifi_config',
@@ -872,6 +872,7 @@ class WiFiManager(object):
     def styles(self, req, resp) -> None:
         """
         Send gzipped CSS content if supported by client.
+
         Shows specifying headers as a flat binary string, more efficient if
         such headers are static.
         """
@@ -894,6 +895,7 @@ class WiFiManager(object):
     def scripts(self, req, resp) -> None:
         """
         Send gzipped JS content if supported by client.
+
         Shows specifying headers as a flat binary string, more efficient if
         such headers are static.
         """
