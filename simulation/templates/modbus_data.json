@@ -1,0 +1,246 @@
+{
+  "ISTS": {
+    "ENABLE_BUTTON_STATE_ISTS": {
+      "register": 11,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "SSR_STATE_ISTS": {
+      "register": 10,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "CHARGING_ACTIVE_ISTS": {
+      "register": 12,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "IREGS": {
+    "CP_HIGH_VOLTAGE_MEDIAN_IREG": {
+      "register": 105,
+      "val": 2848
+    },
+    "LOOP_TIME_US_IREG": {
+      "register": 10,
+      "val": [
+        0,
+        24611
+      ]
+    },
+    "HW_VERSION_PATCH_IREG": {
+      "register": 35,
+      "val": 1
+    },
+    "CHARGING_BEGIN_TIME_IREG": {
+      "register": 51,
+      "val": [
+        0,
+        0
+      ]
+    },
+    "COMPLETE_CHARGING_CYCLES_IREG": {
+      "register": 57,
+      "val": [
+        0,
+        0
+      ]
+    },
+    "CREATION_DATE_IREG": {
+      "register": 36,
+      "val": 19041
+    },
+    "CHARGING_DURATION_IREG": {
+      "register": 55,
+      "val": [
+        0,
+        0
+      ]
+    },
+    "CP_LOW_VOLTAGE_MEDIAN_IREG": {
+      "register": 104,
+      "val": 0
+    },
+    "DEVICE_UUID_IREG": {
+      "register": 14,
+      "val": [
+        66,
+        54,
+        17234,
+        20761,
+        8248,
+        14133
+      ]
+    },
+    "PROGRAM_RAM_IREG": {
+      "register": 24,
+      "val": [
+        0,
+        2200
+      ]
+    },
+    "SW_VERSION_MAJOR_IREG": {
+      "register": 30,
+      "val": 3
+    },
+    "CHARGING_END_TIME_IREG": {
+      "register": 53,
+      "val": [
+        0,
+        0
+      ]
+    },
+    "RAW_CP_HIGH_VALUE_MEDIAN_IREG": {
+      "register": 103,
+      "val": 3540
+    },
+    "PP_VOLTAGE_MEDIAN_IREG": {
+      "register": 101,
+      "val": 2777
+    },
+    "FREE_RAM_IREG": {
+      "register": 22,
+      "val": [
+        0,
+        3688
+      ]
+    },
+    "HW_VERSION_MAJOR_IREG": {
+      "register": 33,
+      "val": 4
+    },
+    "MEASUREMENT_TIME_CP_IREG": {
+      "register": 106,
+      "val": 8801
+    },
+    "SW_VERSION_PATCH_IREG": {
+      "register": 32,
+      "val": 0
+    },
+    "SW_VERSION_MINOR_IREG": {
+      "register": 31,
+      "val": 2
+    },
+    "RAW_PP_VALUE_MEDIAN_IREG": {
+      "register": 100,
+      "val": 3448
+    },
+    "HW_VERSION_MINOR_IREG": {
+      "register": 34,
+      "val": 0
+    },
+    "CHARGING_STATE_IREG": {
+      "register": 62,
+      "val": 0
+    },
+    "MEASUREMENT_TIME_PP_IREG": {
+      "register": 107,
+      "val": 9346
+    },
+    "UPTIME_MS_IREG": {
+      "register": 12,
+      "val": [
+        5406,
+        53656
+      ]
+    },
+    "CHARGING_DUTYCYCLE_IREG": {
+      "register": 60,
+      "val": 255
+    },
+    "SW_VERSION_IREG": {
+      "register": 20,
+      "val": [
+        0,
+        320
+      ]
+    },
+    "CABLE_AMPACITY_IREG": {
+      "register": 61,
+      "val": 0
+    },
+    "RAW_CP_LOW_VALUE_MEDIAN_IREG": {
+      "register": 102,
+      "val": 0
+    },
+    "CHARGING_CURRENT_IREG": {
+      "register": 59,
+      "val": 13
+    }
+  },
+  "HREGS": {
+    "DEVICE_ID_HREG": {
+      "register": 10,
+      "val": 10
+    },
+    "CHARGING_CURRENT_HREG": {
+      "register": 21,
+      "val": 6
+    }
+  },
+  "COILS": {
+    "SYSTEM_RESET_COIL": {
+      "register": 10,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "USE_MB_CURRENT_COIL": {
+      "register": 20,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "CONFIG_RESET_COIL": {
+      "register": 11,
+      "val": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  }
+}

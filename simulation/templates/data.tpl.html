@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="description" content="Modbus Data">
+  <meta name="author" content="Jonas Scharpf aka brainelectronics">
+  <title>Modbus Data</title>
+  <link href="static/css/bootstrap.min.css" rel="stylesheet">
+  <!--
+  <link href="style.css" rel="stylesheet">
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="list-groups.css" rel="stylesheet">
+  -->
+  <style type="text/css">
+    .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background-color:gray;color:#fff;opacity:1;transition:.5s;visibility:visible}
+    .overlay.hidden{opacity:0;visibility:hidden}
+    .loader{position:absolute;left:50%;top:50%;z-index:1;width:120px;height:120px;margin:-76px 0 0 -76px;border:16px solid #f3f3f3;border-radius:50%;border-top:16px solid #3498db;-webkit-animation:spin 2s linear infinite;animation:spin 2s linear infinite}
+    @-webkit-keyframes spin{0%{-webkit-transform:rotate(0)}100%{-webkit-transform:rotate(360deg)}
+    }@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+  </style>
+  <style type="text/css">
+    .list-group{width:auto;max-width:460px;margin:4rem auto}
+    .form-check-input:checked+.form-checked-content{opacity:.5}
+    .form-check-input-placeholder{pointer-events:none;border-style:dashed}[contenteditable]:focus{outline:0}
+    .list-group-checkable{display:grid;gap:.5rem;border:0}
+    .list-group-checkable .list-group-item{cursor:pointer;border-radius:.5rem}
+    .list-group-item-check{position:absolute;clip:rect(0,0,0,0);pointer-events:none}
+    .list-group-item-check:hover+.list-group-item{background-color:var(--bs-light)}
+    .list-group-item-check:checked+.list-group-item{color:#fff;background-color:var(--bs-blue)}
+    .list-group-item-check:disabled+.list-group-item,.list-group-item-check[disabled]+.list-group-item{pointer-events:none;filter:none;opacity:.5}
+  </style>
+  <style type="text/css">
+    body {padding:50px 80px;}
+  </style>
+</head>
+<body>
+  <div id="overlay" class="overlay">
+    <div id="loader" class="loader"></div>
+  </div>
+
+  <div style="display:none;" id="myDiv" class="animate-bottom">
+    <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
+    <h4>Latest Modbus data</h4>
+    <div>
+      Data age:
+      <label id="minutes">00</label>:<label id="seconds">00</label>
+    </div>
+    <div name="modbus_data" id="modbus_data">
+      {{ content|safe }}
+    </div>
+
+    <!--
+    <div class="tab">
+      <button class="tablinks" onclick="openCity(event, 'London')">London</button>
+      <button class="tablinks" onclick="openCity(event, 'Paris')">Paris</button>
+      <button class="tablinks" onclick="openCity(event, 'Tokyo')">Tokyo</button>
+
+    </div>
+
+    <div id="London" class="tabcontent">
+      <h3>London</h3>
+      <p>London is the capital city of England.</p>
+    </div>
+
+    <div id="Paris" class="tabcontent">
+      <h3>Paris</h3>
+      <p>Paris is the capital of France.</p>
+    </div>
+
+    <div id="Tokyo" class="tabcontent">
+      <h3>Tokyo</h3>
+      <p>Tokyo is the capital of Japan.</p>
+    </div>
+    -->
+
+    <!--
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Profile</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Contact</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        HOME CONTENT
+      </div>
+      <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        PROFILE CONTENT
+      </div>
+      <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+        CONTACT CONTENT
+      </div>
+    </div>
+    -->
+
+    </div>
+  </div>
+
+  <script>
+    // var selected_bssid = 0;
+    window.onload = function(e) {
+      setTimeout(showPage, 1);
+      setTimeout(get_new_data, 100);
+      var myInterval = setInterval(get_new_data, 10000);
+    };
+    function showPage() {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("myDiv").style.display = "block";
+      //document.getElementById("rcorners3").style.display = "block";
+      document.getElementById("overlay").style.display = "none";
+    };
+    /*
+    document.getElementById("save_wifi_config_form").onsubmit = function(e) {
+      window.onbeforeunload = null;
+      return true;
+    };
+    function remember_selected_element(cb) {
+      selected_bssid = cb.id;
+    }
+    */
+    var minutesLabel = document.getElementById("minutes");
+    var secondsLabel = document.getElementById("seconds");
+    var totalSeconds = 0;
+    setInterval(setTime, 1000);
+
+    function setTime() {
+      ++totalSeconds;
+      secondsLabel.innerHTML = pad(totalSeconds % 60);
+      minutesLabel.innerHTML = pad(parseInt(totalSeconds / 60));
+    }
+
+    function pad(val) {
+      var valString = val + "";
+      if (valString.length < 2) {
+        return "0" + valString;
+      } else {
+        return valString;
+      }
+    }
+
+    function get_new_data() {
+      // console.log('Getting new data');
+      totalSeconds = 0;
+      /*
+      var xmlhttp = new XMLHttpRequest();
+      var url = "modbus_data";
+      xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          var content = this.responseText;
+          // console.log(content);
+          document.getElementById("modbus_data").innerHTML = content;
+
+          if (selected_bssid) {
+            document.getElementById(selected_bssid).checked = true;
+          }
+        }
+      };
+      xmlhttp.open("GET", url);
+      xmlhttp.send();
+      */
+    }
+    /*
+    function openCity(evt, cityName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(cityName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+    */
+  </script>
+</body>
+</html>
