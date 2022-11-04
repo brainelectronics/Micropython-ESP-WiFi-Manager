@@ -43,8 +43,6 @@ exclude =
     .idea
     # custom scripts, not being part of the distribution
     libs_external
-    # will be resolved in #25
-    simulation
     sdist_upip.py
     setup.py
     update_version.py
