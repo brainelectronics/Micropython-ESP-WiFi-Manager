@@ -6,6 +6,7 @@ Fake Micropython Machine class
 
 See https://docs.micropython.org/en/latest/library/machine.html
 """
+import binascii
 
 
 class machine(object):
@@ -38,7 +39,7 @@ class machine(object):
         :returns:   Device ID
         :rtype:     bytes
         """
-        return b'DEADBEEF'
+        return binascii.unhexlify(b'DEADBEEF')
 
     @staticmethod
     def freq() -> int:
