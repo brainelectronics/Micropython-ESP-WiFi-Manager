@@ -582,7 +582,7 @@ class WiFiManager(object):
             if self._stop_scanning_timer is None:
                 self._stop_scanning_timer = Timer(-1)
             cb_period = int(self.scan_interval * 10 + self.scan_interval / 2)
-            self._stop_scanning_timer.init(mode=machine.Timer.ONE_SHOT,
+            self._stop_scanning_timer.init(mode=Timer.ONE_SHOT,
                                            period=cb_period,
                                            callback=self._stop_scanning_cb)
 

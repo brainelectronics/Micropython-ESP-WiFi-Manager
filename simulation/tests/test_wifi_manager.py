@@ -10,16 +10,13 @@ import shutil
 import tempfile
 from typing import List, Union
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
 # custom imports
-from .unittest_helper import UnitTestHelper
 from generic_helper import GenericHelper
 from generic_helper import Message
-from led_helper import Neopixel     # Led
 from machine import machine
 from wifi_manager import WiFiManager
-from wifi_helper import network
 from wifi_helper import WifiHelper
 
 
@@ -45,7 +42,6 @@ class TestWiFiManager(unittest.TestCase):
         # self.tmp_dir = tempfile.mkdtemp()
 
     def tearDown(self) -> None:
-        self.wm.pixel.fading = False
         self.wm.scanning = False
 
         # shutil.rmtree(self.tmp_dir)
@@ -57,22 +53,23 @@ class TestWiFiManager(unittest.TestCase):
         self.assertIsNotNone(self.wm._config_file)
 
         self.assertIsInstance(self.wm.wh, WifiHelper)
-        self.assertIsInstance(self.wm.pixel, Neopixel)
-        self.assertEqual(self.wm.pixel.color, [20, 20, 0])
-        self.assertEqual(self.wm.pixel.intensity, 20)
 
-        self.assertEqual(self.wm._enc_key, 'DEADBEEFDEADBEEF')
+        self.assertEqual(self.wm._enc_key, 'deadbeefdeadbeef')
         self.assertEqual(len(self.wm._enc_key), 16)
 
         self.assertIsInstance(self.wm._configured_networks, list)
         self.assertEqual(len(self.wm._configured_networks), 0)
+        self.assertEqual(self.wm._selected_network_bssid, '')
+        self.assertEqual(self.wm._connection_timeout, 5)
+        self.assertEqual(self.wm._connection_result, self.wm.ERROR)
 
         self.assertEqual(self.wm._scan_interval, 5000)
         self.assertIsInstance(self.wm._scan_net_msg, Message)
         self.assertEqual(self.wm._scan_net_msg.value(), list())
         self.assertIsNone(self.wm._latest_scan)
+        self.assertIsNone(self.wm._stop_scanning_timer)
 
-        self.assertTrue(self.wm.scanning)
+        self.assertFalse(self.wm.scanning)
 
     @params(
         (
@@ -131,9 +128,9 @@ class TestWiFiManager(unittest.TestCase):
                 # create list of all False with n entries
                 # n = timeout(sec) * calls(sec) + calls before entering connect
                 if isinstance(network_definitions, str):
-                    side_effect = [False] * (int(5 * 1/0.1) + 1)
+                    side_effect = [False] * (int(5 * 1 / 0.1) + 1)
                 elif isinstance(network_definitions, list):
-                    side_effect = [False] * (int(5 * 1/0.1) + 2) * len(network_definitions)
+                    side_effect = [False] * (int(5 * 1 / 0.1) + 2) * len(network_definitions)     # noqa: E501
                 else:
                     raise TypeError('Expectation can only be string or list')
             else:
@@ -142,14 +139,14 @@ class TestWiFiManager(unittest.TestCase):
                 # mock unconnected status for first 5 calls (t = 0.5sec)
                 return_unconnected = [False] * 5
                 if isinstance(network_definitions, str):
-                    return_connected = [True] * int(5 * 1/0.1)
+                    return_connected = [True] * int(5 * 1 / 0.1)
                 elif isinstance(network_definitions, list):
-                    return_connected = [True] * int(5 * 1/0.1) * len(network_definitions)
+                    return_connected = [True] * int(5 * 1 / 0.1) * len(network_definitions)   # noqa: E501
                 else:
                     raise TypeError('Expectation can only be string or list')
                 side_effect = return_unconnected + return_connected
             with patch('wifi_helper.network.Station.isconnected',
-                       side_effect=side_effect) as mock_isconnected:
+                       side_effect=side_effect):
                 result = self.wm.load_and_connect()
                 self.assertEqual(result, expectation)
 
@@ -161,13 +158,17 @@ class TestWiFiManager(unittest.TestCase):
         pass
 
     def test__add_app_routes(self) -> None:
+        """Test added application routes of the webserver"""
         expectation = [
             '/',
-            '/remove_wifi_config',
+            '/select',
+            '/render_network_inputs',
+            '/configure',
             '/save_wifi_config',
-            '/wifi_selection',
-            '/wifi_configs',
+            '/remove_wifi_config',
             '/scan_result',
+            '/static/css/bootstrap.min.css',
+            '/static/js/toast.js',
             '/static/<path:filename>',
         ]
         for rule in self.wm.app.url_map.iter_rules():
@@ -176,25 +177,28 @@ class TestWiFiManager(unittest.TestCase):
     @params(
         (
             'hello',
-            b''',\xddZ\xa2\x16\xf3p\xd3D\xc1\x9cqN\xc2\xb7-'''
+            b'''v\xb1\xecR\x9a\x1a\xf1\xa3X-Yxj\x99\x935'''
         ),
         (
             [True, 'val'],
-            b'''`\x99\xd4\xcdU\xbf\x90\x8e\x16J\xa6\xc6\x18\x1b-J'''
+            b'''\x1d\\^\xdaZ\xf4'\xba\xdf\xdf}\xf6@\xec\xe7\x1d'''
         ),
         (
             {'some': True, 'val': 123},
-            b'''ib\x03\xb5\x8a\xc1}QS\xfd\x1dl,\x80d\xcb/\xe1\xb6G\xe4]\x9c\xee\x84\xb1U\xaa#\x97\x93\xb6'''
+            b'''H\x8e\x06T\xe6\x95\xf2\x0c\xb1\x00\xba\xcd\xe0R\xbf\xcc\xb0\x0c\x11\x16d\xad7P+\x05T\x1c\xaf\x10\x0c\xbf'''    # noqa: E501
         ),
         # single network
         (
             {"ssid": "MyNet", "password": "empty"},
-            b'''E\xcd\xc6\xa4\xbc4\x05(\xc96\xf4\xa9\xf7\x83\x83\xb7\x08u\x94\xa6bn\xbf|\x19\xd5\xd2\xff\xddw\tGw\x9f\xda\xc6\xa3\xe1\x9b\x16F\xa2~ 1\xa1Z\x19'''
+            b'''\xbe\xd4\x90\x96TohH*G\x07\x93\x91x\x01z\x1d\xff\xfb\x00Oa\xc73\x96\t\xc1\xbc~\x1e\xa4\x04`\x9d=\xe4\x1f1\xdb\xfb\xf5\x8d\x06\xbe\xe4>\x84\xc7'''   # noqa: E501
         ),
         # multi network
         (
-            [{"ssid": "SSID Name", "password": "1234qwertz@"}, {"ssid": "Other-Network@1", "password": "password"}],
-            b'''=\xd0B\xa4\xad\xc5\xbd\x07]\x0cI\x1a\xe1\x0c\xe2\x06\xe6V\xf3\x82\x8a\x83xx\xea\x13D:\xd9c\xab\x0e53\xbc1-Jo\xbb\xfb\xf4M\xd9x\xbbn;j\x10\xa63\xe9b\xbeE\x19\x8czmD\xfb\xbe\xecl\xd8\xce,\xddJ:4\\\xc1ds\xc5_\x91\x85\x16\xce$@\xab+\x9b\xf3\xe4z\xdc\xa6\xce~\x82b\x01\x83\x8b\xe4lD\x8f\xad\xc2h\xce\xeaM\xa3Y)'''
+            [
+                {"ssid": "SSID Name", "password": "1234qwertz@"},
+                {"ssid": "Other-Network@1", "password": "password"}
+            ],
+            b''';?C\xe8\x8c\xff\xdf^\x1c\xd8\xc5\xceC\xf5\x0e\xd0\xa5\xf1\x10}}\x0el\xf5\x9d\x91\xf1\xeb\x1a&\x1d\xa2\x1a\x91\x9a\xd6l\x0f4;\x9e\r*\xdd\x936\x04\x97\xbd\xce\xc9_^"\x0b\xa1\xa4\xabx\xc0_\xe8\xcaR~3\x96cc\x16\x8f\x1d\xf4\x10\xe9\xa9!\xfa\x04\xd4\xfa\x1c\x1f\xe6(\xa9\x15n\xe2j\xdf\xb1j\xdd\xc2\x85\x99<`\xcc{@\x06\xa2\xa0\xbfA\x15\xc1\xeeZ\x10'''    # noqa: E501
         )
     )
     def test__encrypt_data(self,
@@ -209,22 +213,21 @@ class TestWiFiManager(unittest.TestCase):
         :type       expectation:    bytes
         """
         result = self.wm._encrypt_data(data=data)
-
         self.assertEqual(result, expectation)
 
     @params(
         (
-            b''',\xddZ\xa2\x16\xf3p\xd3D\xc1\x9cqN\xc2\xb7-''',
+            b'''v\xb1\xecR\x9a\x1a\xf1\xa3X-Yxj\x99\x935''',
             None,
             'hello'
         ),
         (
-            b'''`\x99\xd4\xcdU\xbf\x90\x8e\x16J\xa6\xc6\x18\x1b-J''',
+            b'''\x1d\\^\xdaZ\xf4'\xba\xdf\xdf}\xf6@\xec\xe7\x1d''',
             None,
             "[True, 'val']"
         ),
         (
-            b'''ib\x03\xb5\x8a\xc1}QS\xfd\x1dl,\x80d\xcb/\xe1\xb6G\xe4]\x9c\xee\x84\xb1U\xaa#\x97\x93\xb6''',
+            b'''H\x8e\x06T\xe6\x95\xf2\x0c\xb1\x00\xba\xcd\xe0R\xbf\xcc\xb0\x0c\x11\x16d\xad7P+\x05T\x1c\xaf\x10\x0c\xbf''',    # noqa: E501
             None,
             "{'some': True, 'val': 123}"
         ),
@@ -236,7 +239,10 @@ class TestWiFiManager(unittest.TestCase):
         (
             b'',
             'multi-network.json',
-            [{"ssid": "SSID Name", "password": "1234qwertz@"}, {"ssid": "Other-Network@1", "password": "password"}]
+            [
+                {"ssid": "SSID Name", "password": "1234qwertz@"},
+                {"ssid": "Other-Network@1", "password": "password"}
+            ]
         )
     )
     def test__decrypt_data(self,
@@ -275,7 +281,7 @@ class TestWiFiManager(unittest.TestCase):
             'not-existing-file.json',   # path to file to be extended
             {"ssid": "new_network", "password": "some_password"},   # new net
             ["new_network"],            # expected known networks
-            {"ssid": "new_network", "password": "some_password"},   # expected file content
+            {"ssid": "new_network", "password": "some_password"},   # expected file content # noqa: E501
             False                       # file is not encrypted
         ),
         (
@@ -435,6 +441,20 @@ class TestWiFiManager(unittest.TestCase):
                                      expected_file_content: Union[dict,
                                                                   List[dict]],
                                      is_encrypted: bool) -> None:
+        """
+        Test extending WiFi configuration data of file
+
+        :param      file_path:          Path to file to decrypt
+        :type       file_path:          str
+        :param      data:               The data to extend the file
+        :type       data:               bytes
+        :param      expected_networks:  Expected networks of file
+        :type       expected_networks:  bytes
+        :param      expected_file_content: Expected content after extension
+        :type       expected_file_content: Union[dict, List[dict]]
+        :param      is_encrypted:       Flag whether file is encrypted
+        :type       is_encrypted:       bool
+        """
         root_path = self.get_current_path() / 'data'
         if is_encrypted:
             path = str(root_path / 'encrypted' / file_path)
@@ -591,6 +611,7 @@ class TestWiFiManager(unittest.TestCase):
         )
     )
     def test_scan_interval(self, value: int, expectation: int) -> None:
+        """Test getting the WiFi scan interval in milliseconds"""
         self.wm.scan_interval = value
         self.assertEqual(self.wm.scan_interval, expectation)
 
@@ -598,7 +619,12 @@ class TestWiFiManager(unittest.TestCase):
     def test_scanning(self) -> None:
         pass
 
+    @unittest.skip("Not yet implemented")
+    def test__stop_scanning_cb(self) -> None:
+        pass
+
     def test_latest_scan(self) -> None:
+        """Test getting lastest scanned networks"""
         required_keys = [
             'ssid', 'RSSI', 'bssid', 'authmode', 'quality', 'channel', 'hidden'
         ]
@@ -619,12 +645,36 @@ class TestWiFiManager(unittest.TestCase):
             for key in ele.keys():
                 self.assertIn(key, required_keys)
 
+    @unittest.skip("Not yet implemented")
+    def test__render_index_page(self) -> None:
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test__render_network_inputs(self) -> None:
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test__save_wifi_config(self) -> None:
+        pass
+
+    @unittest.skip("Not yet implemented")
+    def test__remove_wifi_config(self) -> None:
+        pass
+
+    @unittest.skip("Function only works while Flask app is running")
+    def test_landing_page(self) -> None:
+        pass
+
     @unittest.skip("Function only works while Flask app is running")
     def test_scan_result(self) -> None:
         pass
 
     @unittest.skip("Function only works while Flask app is running")
     def test_wifi_selection(self) -> None:
+        pass
+
+    @unittest.skip("Function only works while Flask app is running")
+    def test_render_network_inputs(self) -> None:
         pass
 
     @unittest.skip("Function only works while Flask app is running")
@@ -675,8 +725,16 @@ class TestWiFiManager(unittest.TestCase):
     def test_remove_wifi_config(self):
         pass
 
-    @unittest.skip("Not yet implemented")
-    def test__remove_wifi_config(self):
+    @unittest.skip("Function only works while Flask app is running")
+    def test_styles(self):
+        pass
+
+    @unittest.skip("Function only works while Flask app is running")
+    def test_scripts(self):
+        pass
+
+    @unittest.skip("Function only works while Flask app is running")
+    def test_sendfile(self):
         pass
 
     @unittest.skip("Function only works while Flask app is running")
