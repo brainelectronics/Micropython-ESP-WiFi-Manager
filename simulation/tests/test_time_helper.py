@@ -20,7 +20,7 @@ class TestTimeHelper(unittest.TestCase):
             #            (year, m, day, h, min, sec, weekday, yearday)
             return_value=(2022, 11, 3, 18, 15, 31, 3, 307)
             #             0,    1,  2, 3,  4,  5,  6,  7
-            )
+        )
         self.th = TimeHelper()
         self.th.sync_time()
 

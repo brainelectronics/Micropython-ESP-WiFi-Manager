@@ -151,7 +151,7 @@ class TestGenericHelper(unittest.TestCase):
         :param      expectation:  The expectation
         :type       expectation:  Union[int, str]
         """
-        return_value = os.statvfs_result((4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188, 14915188, 0, 255))
+        return_value = os.statvfs_result((4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188, 14915188, 0, 255))  # noqa: E501
 
         with patch('os.statvfs', return_value=return_value):
             result = GenericHelper.df(unit=unit)

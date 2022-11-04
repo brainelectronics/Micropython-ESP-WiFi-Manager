@@ -5,16 +5,15 @@
 
 from nose2.tools import params
 import random
-from typing import Union
 import unittest
 from unittest.mock import patch
 import sys
 
 # custom imports
 from wifi_helper.network import NetworkHelper
-from wifi_helper.network import Station
+# from wifi_helper.network import Station
 from wifi_helper.network import Client
-from wifi_helper.network import WLAN
+# from wifi_helper.network import WLAN
 
 
 class TestNetworkHelper(unittest.TestCase):
@@ -67,7 +66,9 @@ class TestNetworkHelper(unittest.TestCase):
 
         for net in nets:
             self.assertIsInstance(net, dict)
-            required_keys = ['ssid', 'RSSI', 'bssid', 'authmode', 'channel', 'hidden']
+            required_keys = [
+                'ssid', 'RSSI', 'bssid', 'authmode', 'channel', 'hidden'
+            ]
             self.assertEqual(len(net.keys()), len(required_keys))
             self.assertTrue(all(name in required_keys for name in net.keys()))
 
@@ -129,7 +130,8 @@ class TestNetworkHelper(unittest.TestCase):
             mock_randint.side_effect = mocked_rssi
             dummy_data = NetworkHelper._dummy_data()
 
-        dummy_data_upy = NetworkHelper._convert_scan_to_upy_format(data=dummy_data)
+        dummy_data_upy = NetworkHelper._convert_scan_to_upy_format(
+            data=dummy_data)
 
         self.assertIsInstance(dummy_data_upy, list)
         self.assertEqual(len(dummy_data_upy), 2)
@@ -216,7 +218,7 @@ class TestClient(unittest.TestCase):
     def test__init__(self) -> None:
         ap = Client()
 
-        self.assertIsNone(ap._bssid)
+        self.assertIsNone(ap._essid)
         self.assertIsNone(ap._authmode)
         self.assertIsNone(ap._password)
         self.assertIsNone(ap._channel)

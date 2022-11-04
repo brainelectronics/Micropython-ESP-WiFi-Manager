@@ -3,13 +3,11 @@
 
 """Unittest of LED Helper"""
 
-from nose2.tools import params
-import _thread
-from typing import Union
 import unittest
 
 # custom imports
 from led_helper import Led
+from led_helper import Neopixel
 from led_helper import NeoPixel
 
 

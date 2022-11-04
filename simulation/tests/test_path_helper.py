@@ -19,6 +19,7 @@ class TestPathHelper(unittest.TestCase):
         pass
 
     def test_exists(self) -> None:
+        """Test existance of file at given path"""
         with patch.object(Path, 'exists') as mock_exists:
             # mock file existance
             mock_exists.return_value = True
