@@ -27,9 +27,19 @@ class TestWiFiManager(unittest.TestCase):
     # Set maximum size of the assertion error message when Unit Test fail
     maxDiff = None
 
+    def get_current_path(self) -> Path:
+        """
+        Get the path to this file.
+
+        :returns:   The path of this file
+        :rtype:     Path object
+        """
+        here = Path(__file__).parent.resolve()
+
+        return here
+
     def setUp(self) -> None:
         self.wm = WiFiManager(logger=None, quiet=False)
-        self.uth = UnitTestHelper(quiet=False)
 
         # create a tmp directory
         # self.tmp_dir = tempfile.mkdtemp()
@@ -109,7 +119,7 @@ class TestWiFiManager(unittest.TestCase):
         :type       expectation:    bool
         """
         # overwrite config file path with given path
-        file_path = self.uth.get_current_path() / 'data' / 'encrypted' / path
+        file_path = self.get_current_path() / 'data' / 'encrypted' / path
         self.wm._config_file = str(file_path)
 
         # mock unknown reset cause
@@ -244,7 +254,7 @@ class TestWiFiManager(unittest.TestCase):
         :type       expectation:    bytes
         """
         if file_path:
-            path = self.uth.get_current_path() / 'data' / 'encrypted'
+            path = self.get_current_path() / 'data' / 'encrypted'
             file_path = str(path / file_path)
 
             data = b''
@@ -425,7 +435,7 @@ class TestWiFiManager(unittest.TestCase):
                                      expected_file_content: Union[dict,
                                                                   List[dict]],
                                      is_encrypted: bool) -> None:
-        root_path = self.uth.get_current_path() / 'data'
+        root_path = self.get_current_path() / 'data'
         if is_encrypted:
             path = str(root_path / 'encrypted' / file_path)
         else:
@@ -540,7 +550,7 @@ class TestWiFiManager(unittest.TestCase):
         :param      expectation:    Expected encrypted data as bytes
         :type       expectation:    Union[dict, List[dict]]
         """
-        root_path = self.uth.get_current_path() / 'data'
+        root_path = self.get_current_path() / 'data'
         if encrypted:
             path = str(root_path / 'encrypted' / path)
         else:
