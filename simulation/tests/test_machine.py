@@ -26,7 +26,7 @@ class TestMachine(unittest.TestCase):
         """Test getting the unique ID"""
         result = machine.unique_id()
         self.assertIsInstance(result, bytes)
-        self.assertEqual(result, b'DEADBEEF')
+        self.assertEqual(result, b'\xde\xad\xbe\xef')
 
     def test_freq(self) -> None:
         """Test getting the device CPU frequency"""

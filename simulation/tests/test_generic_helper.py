@@ -113,17 +113,17 @@ class TestGenericHelper(unittest.TestCase):
     def test_get_uuid(self) -> None:
         """Test getting the UUID of the device"""
         value = GenericHelper.get_uuid()
-        self.assertEqual(value, b'4445414442454546')
+        self.assertEqual(value, b'deadbeef')
 
         requested_length = 10
         value = GenericHelper.get_uuid(length=requested_length)
         self.assertEqual(len(value), requested_length)
-        self.assertEqual(value, b'4445414442')
+        self.assertEqual(value, b'deadbeefde')
 
-        requested_length = -8
+        requested_length = -5
         value = GenericHelper.get_uuid(length=requested_length)
         self.assertEqual(len(value), abs(requested_length))
-        self.assertEqual(value, b'42454546')
+        self.assertEqual(value, b'dbeef')
 
     @params(
         (None, 61354754048),
