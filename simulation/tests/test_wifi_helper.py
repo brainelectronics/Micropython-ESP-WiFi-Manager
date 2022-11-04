@@ -9,7 +9,6 @@ import unittest
 from unittest.mock import patch
 
 # custom imports
-from .unittest_helper import UnitTestHelper
 from machine import machine
 from wifi_helper import network
 from wifi_helper import WifiHelper
@@ -21,7 +20,6 @@ class TestWifiHelper(unittest.TestCase):
 
     def setUp(self) -> None:
         self.wh = WifiHelper()
-        self.uth = UnitTestHelper(quiet=False)
 
         # activate WiFi before usage
         self.wh.station.active(True)
@@ -34,7 +32,9 @@ class TestWifiHelper(unittest.TestCase):
         """Test initial values if WifiHelper"""
         wh = WifiHelper()
 
-        required_keys = ['ssid', 'bssid', 'channel', 'RSSI', 'authmode', 'hidden']
+        required_keys = [
+            'ssid', 'bssid', 'channel', 'RSSI', 'authmode', 'hidden'
+        ]
         self.assertIsInstance(wh._scan_info, list)
         self.assertEqual(len(wh._scan_info), len(required_keys))
         self.assertTrue(all(name in required_keys for name in wh._scan_info))
@@ -54,7 +54,7 @@ class TestWifiHelper(unittest.TestCase):
             mock_reset_cause.return_value = machine.SOFT_RESET
             # mock already connected
             with patch('wifi_helper.network.Station.isconnected',
-                       return_value=True) as mock_isconnected:
+                       return_value=True):
                 station = network.WLAN(network.STA_IF)
                 result = WifiHelper._do_connect(station=station,
                                                 ssid='qwertz',
@@ -85,7 +85,7 @@ class TestWifiHelper(unittest.TestCase):
             side_effect_connected = [True] * int(timeout * 10 * (1 - ratio))
             side_effect = side_effect_unconnected + side_effect_connected
             with patch('wifi_helper.network.Station.isconnected',
-                       side_effect=side_effect) as mock_isconnected:
+                       side_effect=side_effect):
                 station = network.WLAN(network.STA_IF)
 
                 with patch.object(station, 'disconnect') as mock_disconnect:
@@ -118,10 +118,10 @@ class TestWifiHelper(unittest.TestCase):
         with patch('machine.machine.reset_cause') as mock_reset_cause:
             mock_reset_cause.return_value = machine.UNKNOWN_RESET
             # mock unconnected status for n+1 calls
-            side_effect = [False]*(timeout * 10 + 1)
+            side_effect = [False] * (timeout * 10 + 1)
 
             with patch('wifi_helper.network.Station.isconnected',
-                       side_effect=side_effect) as mock_isconnected:
+                       side_effect=side_effect):
                 station = network.WLAN(network.STA_IF)
 
                 with patch.object(station, 'disconnect') as mock_disconnect:
@@ -144,9 +144,9 @@ class TestWifiHelper(unittest.TestCase):
                                        timeout: int,
                                        reconnect: bool) -> None:
         with patch('wifi_helper.network.Station.isconnected',
-                   return_value=True) as mock_isconnected:
+                   return_value=True):
             with patch('wifi_helper.network.Station.config',
-                       return_value=ssid) as mock_config:
+                       return_value=ssid):
                 if reconnect:
                     # check call of disonnect
                     with patch.object(network.Station,
@@ -168,9 +168,10 @@ class TestWifiHelper(unittest.TestCase):
         is_connected = self.wh.isconnected
         self.assertFalse(is_connected)
 
-        self.wh.station.connected = True
-        is_connected = self.wh.isconnected
-        self.assertTrue(is_connected)
+        with patch('wifi_helper.network.Station.isconnected',
+                   return_value=True):
+            is_connected = self.wh.isconnected
+            self.assertTrue(is_connected)
 
     def test_station(self) -> None:
         station = self.wh.station
@@ -180,7 +181,11 @@ class TestWifiHelper(unittest.TestCase):
     @params(
         ('qwertz', '1234', 9, 10)
     )
-    def test_create_ap(self, ssid: str, password: str, channel: int, timeout: int) -> None:
+    def test_create_ap(self,
+                       ssid: str,
+                       password: str,
+                       channel: int,
+                       timeout: int) -> None:
         """
         Test creation of an AccessPoint
 
