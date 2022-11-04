@@ -654,10 +654,6 @@ class TestWiFiManager(unittest.TestCase):
         pass
 
     @unittest.skip("Not yet implemented")
-    def test__save_wifi_config(self) -> None:
-        pass
-
-    @unittest.skip("Not yet implemented")
     def test__remove_wifi_config(self) -> None:
         pass
 
