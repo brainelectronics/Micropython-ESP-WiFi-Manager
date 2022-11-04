@@ -56,7 +56,7 @@ class TestTimer(unittest.TestCase):
         time.sleep((cb_period / 1000) * iterations + 1)
         this_timer.deinit()
 
-        self.assertEqual(self.my_var, iterations)
+        self.assertGreaterEqual(self.my_var, iterations)
 
     def test_init_unsupported(self) -> None:
         """Test initializing timer with unsupported mode"""
