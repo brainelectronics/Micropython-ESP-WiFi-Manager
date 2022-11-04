@@ -17,14 +17,22 @@ class TestMachine(unittest.TestCase):
         pass
 
     def test_reset_cause(self) -> None:
+        """Test getting the reset cause"""
         result = machine.reset_cause()
         self.assertEqual(result, 5)
         self.assertEqual(result, machine.SOFT_RESET)
 
     def test_unique_id(self) -> None:
+        """Test getting the unique ID"""
         result = machine.unique_id()
         self.assertIsInstance(result, bytes)
         self.assertEqual(result, b'DEADBEEF')
+
+    def test_freq(self) -> None:
+        """Test getting the device CPU frequency"""
+        result = machine.freq()
+        self.assertIsInstance(result, int)
+        self.assertEqual(result, 160 * 1000 * 1000)
 
 
 if __name__ == '__main__':

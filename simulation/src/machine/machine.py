@@ -22,12 +22,30 @@ class machine(object):
 
     @staticmethod
     def reset_cause() -> int:
+        """
+        Get last reset cause
+
+        :returns:   Reset cause
+        :rtype:     int
+        """
         return machine.SOFT_RESET
 
     @staticmethod
     def unique_id() -> bytes:
+        """
+        Get unique device ID
+
+        :returns:   Device ID
+        :rtype:     bytes
+        """
         return b'DEADBEEF'
 
     @staticmethod
     def freq() -> int:
+        """
+        Get current CPU frequency
+
+        :returns:   CPU frequency in Hz
+        :rtype:     int
+        """
         return 160 * 1000 * 1000
