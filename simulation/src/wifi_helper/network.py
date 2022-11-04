@@ -75,16 +75,16 @@ class NetworkHelper(object):
         :returns:   List of found networks as dict
         :rtype:     List[dict]
         """
-        scan_result = subprocess.check_output(['/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport', '--scan'])
+        scan_result = subprocess.check_output(['/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport', '--scan'])  # noqa: E501
 
         if len(scan_result) == 0:
             return NetworkHelper._dummy_data()
 
         scan_result = [ele.decode('ascii') for ele in scan_result.splitlines()]
         # [
-        #     b'                            SSID BSSID             RSSI CHANNEL HT CC SECURITY (auth/unicast/group)',
-        #     b'                  TP-LINK_FBFC3C a0:f3:c1:fb:fc:3c -57  1,+1    Y  -- WPA(PSK/AES,TKIP/TKIP) WPA2(PSK/AES,TKIP/TKIP) ',
-        #     b'                  FRITZ!Box 7490 38:10:d5:17:eb:39 -56  1,+1    Y  DE WPA2(PSK/AES/AES) '
+        #     b'                            SSID BSSID             RSSI CHANNEL HT CC SECURITY (auth/unicast/group)',   # noqa: E501
+        #     b'                  TP-LINK_FBFC3C a0:f3:c1:fb:fc:3c -57  1,+1    Y  -- WPA(PSK/AES,TKIP/TKIP) WPA2(PSK/AES,TKIP/TKIP) ', # noqa: E501
+        #     b'                  FRITZ!Box 7490 38:10:d5:17:eb:39 -56  1,+1    Y  DE WPA2(PSK/AES/AES) '   # noqa: E501
         # ]
 
         description = re.sub(' +', ' ', scan_result[0]).lstrip().split(' ')
@@ -184,21 +184,23 @@ class NetworkHelper(object):
         :rtype:     List[dict]
         """
         try:
-            scan_result = subprocess.check_output(['netsh', 'wlan', 'show', 'networks', 'mode=bssid'])
-        except Exception as e:
-            # print('Failed to scan due to this error: {}'.format(e))
+            scan_result = subprocess.check_output(
+                ['netsh', 'wlan', 'show', 'networks', 'mode=bssid']
+            )
+        except Exception:
             return NetworkHelper._dummy_data()
 
         # netsh call returns report in local language, try to decode it
         try:
-            scan_result = [ele.decode('cp850').lstrip() for ele in scan_result.splitlines()]
-        except Exception as e:
-            # print('Failed to decode scan data due to this error: {}'.format(e))
+            scan_result = [
+                ele.decode('cp850').lstrip() for ele in scan_result.splitlines()    # noqa: E501
+            ]
+        except Exception:
             return NetworkHelper._dummy_data()
 
         # [
         #     '',
-        #     'Schnittstellenname : WLAN ', 'Momentan sind 2 Netzwerke sichtbar.',
+        #     'Schnittstellenname : WLAN ', 'Momentan sind 2 Netzwerke sichtbar.',  # noqa: E501
         #     '',
         #     'SSID 1 : FRITZ!Box 7490',
         #     'Netzwerktyp             : Infrastruktur',
@@ -259,10 +261,14 @@ class NetworkHelper(object):
         for net in nets_parsed:
             info = dict()
 
-            ssid_key = [ssid for ssid in net.keys() if ssid.startswith('ssid ')][0]
+            ssid_key = [
+                ssid for ssid in net.keys() if ssid.startswith('ssid ')
+            ][0]
             info['ssid'] = net[ssid_key]
 
-            bssid_key = [bssid for bssid in net.keys() if bssid.startswith('bssidd ')][0]
+            bssid_key = [
+                bssid for bssid in net.keys() if bssid.startswith('bssidd ')
+            ][0]
             info['bssid'] = net[bssid_key]
 
             quality = int(net['signal'][:-1])
@@ -278,7 +284,9 @@ class NetworkHelper(object):
                 # other system language
                 info['channel'] = 1
 
-            auth_key = [auth for auth in net.keys() if auth.startswith('auth')][0]
+            auth_key = [
+                auth for auth in net.keys() if auth.startswith('auth')
+            ][0]
             if len(auth_key):
                 # german or english system language
                 info['authmode'] = net[auth_key]
@@ -330,7 +338,7 @@ class NetworkHelper(object):
         :returns:   dBm in range [-100, -50]
         :rtype:     int
         """
-        # https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm/30585711
+        # https://stackoverflow.com/questions/15797920/how-to-convert-wifi-signal-strength-from-quality-percent-to-rssi-dbm/30585711    # noqa: E501
         return min(max((quality / 2) - 100, -100), -50)
 
     @staticmethod
@@ -379,7 +387,7 @@ class NetworkHelper(object):
         return nets_raw
 
     @staticmethod
-    def _convert_scan_to_upy_format(data: List[dict]) -> List[Tuple[Union[str, int]]]:
+    def _convert_scan_to_upy_format(data: List[dict]) -> List[Tuple[Union[str, int]]]:  # noqa: E501
         """
         Convert dummy data to raw data as Mircopython scan would return
 
@@ -530,7 +538,7 @@ class Station(NetworkHelper):
             pass
 
     def ifconfig(self,
-                 value: Optional[Tuple[str, str, str, str]] = None) -> Union[None, Tuple[str, str, str, str]]:
+                 value: Optional[Tuple[str, str, str, str]] = None) -> Union[None, Tuple[str, str, str, str]]:  # noqa: E501
         """
         Get/set IP-level network interface parameters
 
@@ -612,7 +620,7 @@ class Client(NetworkHelper):
             return self._active
 
     def ifconfig(self,
-                 value: Optional[Tuple[str, str, str, str]] = None) -> Union[None, Tuple[str, str, str, str]]:
+                 value: Optional[Tuple[str, str, str, str]] = None) -> Union[None, Tuple[str, str, str, str]]:  # noqa: E501
         """
         Get/set IP-level network interface parameters
 
