@@ -825,7 +825,6 @@ class WiFiManager(object):
         # disable submit button by default
         return render_template('remove.tpl.html',
                                wifi_nets=configured_nets,
-                               # index_js=self.scripts,
                                button_mode='disabled')
 
     # @app.route("/save_wifi_config", methods=['POST', 'GET'])
@@ -921,8 +920,8 @@ class WiFiManager(object):
         :param      writer:        The writer
         :type       writer:        Optional
         """
-        here = Path(__file__)
-        flask_root_folder = (here.parent / '..' / '..' / '..').resolve()
+        here = Path(__file__).parent
+        flask_root_folder = (here / '..' / '..' / '..').resolve()
         file_path = str(flask_root_folder) + str(fname)
 
         self.logger.debug('Open file {}'.format(file_path))
