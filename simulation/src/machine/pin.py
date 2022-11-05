@@ -17,7 +17,7 @@ class Pin(object):
     def __init__(self, pin: int, mode: int):
         self._pin = pin
         self._mode = mode
-        self._value = 0
+        self._value = False
 
     def value(self, val: Optional[Union[int, bool]] = None) -> Optional[bool]:
         """
