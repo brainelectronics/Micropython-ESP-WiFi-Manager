@@ -14,9 +14,6 @@ from time_helper import TimeHelper
 class TestTimeHelper(unittest.TestCase):
     def setUp(self) -> None:
         time.localtime = Mock(
-            # return_value=time.struct_time(tm_year=2022, tm_mon=11, tm_mday=3,
-            #                               tm_hour=18, tm_min=15, tm_sec=0,
-            #                               tm_wday=3, tm_yday=307, tm_isdst=0)
             #            (year, m, day, h, min, sec, weekday, yearday)
             return_value=(2022, 11, 3, 18, 15, 31, 3, 307)
             #             0,    1,  2, 3,  4,  5,  6,  7
