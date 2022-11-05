@@ -18,9 +18,16 @@ class TestTimer(unittest.TestCase):
         pass
 
     def increment_var(self, tim: machine.Timer = None) -> None:
+        """
+        Internal test function called by Timer callback to increment variable
+
+        :param      tim:  The MicroPython compliant Timer argument
+        :type       tim:  machine.Timer
+        """
         self.my_var += 1
 
     def test__init__(self) -> None:
+        """Test init of Timer"""
         this_timer = machine.Timer(-1)
         self.assertIsNone(this_timer._timer)
 
@@ -72,6 +79,7 @@ class TestTimer(unittest.TestCase):
         self.assertEqual('Unsupported Timer mode: {}'.format(unsupported_mode),
                          str(context.exception))
 
+    @unittest.skip("Covered by test_init_periodic")
     def test_deinit(self) -> None:
         pass
 
