@@ -20,7 +20,7 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
-## [1.8.0] - 2022-11-04
+## [1.8.0] - 2022-11-06
 ### Added
 - Deploy to [Test Python Package Index](https://test.pypi.org/) on every PR
   build with a [PEP440][ref-pep440] compliant `-rc<BUILDNUMBER>.dev<PR_NUMBER>`
@@ -28,17 +28,37 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - [Test release workflow](.github/workflows/test-release.yaml) running only on
   PRs is archiving and uploading built artifacts to
   [Test Python Package Index](https://test.pypi.org/)
-- Added missing functions to `generic_helper` simulation files, see
+- Added missing functions `get_uuid`, `get_system_infos_raw` and
+  `get_system_infos_human` to `generic_helper` simulation files, see
+  [#16][ref-issue-16]
+- Added `Led` class to `led_helper` simulation file, see [#16][ref-issue-16]
+- Added missing function `freq` to `machine` simulation file, see
   [#16][ref-issue-16]
 - Increased coverage of simulation unittests, relates to [#16][ref-issue-16]
 - Script to [create report directories](simulation/create_report_dirs.py) for
   [simulation unittests](simulation/tests) results
+- Requirements files for deploy and test setup. Link with simulation
+  requirements
+- Script to [create report directories](simulation/create_report_dirs.py) for
+  simulation unittests
+- Implement `RTC` class of `rtc` simulation file, see [#16][ref-issue-16]
+- Implement `Timer` class of `timer` simulation file, see [#16][ref-issue-16]
+- Add all missing functions of `time_helper` simulation file,
+  see [#16][ref-issue-16]
+- Added missing function `value`, `on` and `off` to `pin` simulation file, see
+  [#16][ref-issue-16]
 
 ### Changed
 - Author is explicitly mentioned in [`setup.py`](setup.py) instead of used by
   `__author__` variable which has been previously defined in
   [`version.py`](wifi_manager/version.py) but no longer available with
   autodeploy.
+- Print source code of flake8 warnings in stdout
+- `unique_id` of `machine` simulation returns binary data represented by the
+  hexadecimal string `DEADBEEF` instead of binary string only
+- Update test data files after hexlified machine unique ID change
+- Update simulation template files to latest MicroPython implementation, see
+  [#16][ref-issue-16]
 
 ### Removed
 - `.flake8` definition file of [`simulation`](simulation)
@@ -46,6 +66,8 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 ### Fixed
 - All uncovered flake8 warnings of [`wifi_manager`](wifi_manager) and
   [`simulation`](simulation), see [#25][ref-issue-25]
+- Logger level is set to `INFO` instead of `DEBUG` if `info` is specified
+- Undefined `_bssid` replaced with `_essid` in `network` simulation test
 
 ## [1.7.1] - 2022-05-06
 ### Fixed
