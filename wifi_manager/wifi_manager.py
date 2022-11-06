@@ -49,7 +49,8 @@ class WiFiManager(object):
     def __init__(self, logger=None, quiet=False, name=__name__):
         # setup and configure logger if none is provided
         if logger is None:
-            logger = GenericHelper.create_logger(logger_name=self.__class__.__name__)
+            logger = GenericHelper.create_logger(
+                logger_name=self.__class__.__name__)
             GenericHelper.set_level(logger, 'debug')
         self.logger = logger
         self.logger.disabled = quiet
@@ -246,9 +247,9 @@ class WiFiManager(object):
         # @app.route('/index')
         # def index(self, req, resp): pass
         # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L251
-        self.app.add_url_rule(url="/", func=self.landing_page)
+        self.app.add_url_rule(url='/', func=self.landing_page)
         self.app.add_url_rule(url='/select', func=self.wifi_selection)
-        self.app.add_url_rule("/render_network_inputs",
+        self.app.add_url_rule(url='/render_network_inputs',
                               func=self.render_network_inputs)
         self.app.add_url_rule(url='/configure', func=self.wifi_configs)
         self.app.add_url_rule(url='/save_wifi_config',
@@ -257,9 +258,9 @@ class WiFiManager(object):
                               func=self.remove_wifi_config)
         self.app.add_url_rule(url='/scan_result', func=self.scan_result)
 
-        self.app.add_url_rule(url=re.compile('^\/(.+\.css)$'),
+        self.app.add_url_rule(url=re.compile(r'^\/(.+\.css)$'),
                               func=self.styles)
-        self.app.add_url_rule(url=re.compile('^\/(.+\.js)$'),
+        self.app.add_url_rule(url=re.compile(r'^\/(.+\.js)$'),
                               func=self.scripts)
 
         available_urls = {
@@ -301,7 +302,7 @@ class WiFiManager(object):
         enc = ucryptolib.aes(self._enc_key, 1)
 
         # add '\x00' to fill up the data string to reach a multiple of 16
-        encrypted_data = enc.encrypt(data_bytes + b'\x00' * ((16 - (len(data_bytes) % 16)) % 16))
+        encrypted_data = enc.encrypt(data_bytes + b'\x00' * ((16 - (len(data_bytes) % 16)) % 16))   # noqa: E501
 
         return encrypted_data
 
@@ -587,7 +588,10 @@ class WiFiManager(object):
             <div class="col-sm-4 py-2"><div class="card h-100 {color}"><div class="card-body">
                 <h3 class="card-title">{title}</h3><p class="card-text">{text}</p>
                 <a href="{url}" class="stretched-link"></a></div></div></div>
-            """.format(color=info['color'], title=info['title'], text=info['text'], url=url)
+            """.format(color=info['color'],     # noqa: E501
+                       title=info['title'],
+                       text=info['text'],
+                       url=url)
 
         return content
 
@@ -619,7 +623,7 @@ class WiFiManager(object):
                     Signal quality {quality}&#37;, BSSID {bssid}
                   </span>
                 </label>
-                """.format(bssid=ele['bssid'],
+                """.format(bssid=ele['bssid'],  # noqa: E501
                            state=selected,
                            ssid=ele['ssid'],
                            quality=ele['quality'])
@@ -816,7 +820,9 @@ class WiFiManager(object):
         yield from picoweb.start_response(resp)
         yield from self.app.render_template(writer=resp,
                                             tmpl_name='remove.tpl',
-                                            args=(req, configured_nets, 'disabled'))
+                                            args=(req,
+                                                  configured_nets,
+                                                  'disabled'))
 
     # @app.route("/save_wifi_config")
     def save_wifi_config(self, req, resp) -> None:
@@ -866,6 +872,7 @@ class WiFiManager(object):
     def styles(self, req, resp) -> None:
         """
         Send gzipped CSS content if supported by client.
+
         Shows specifying headers as a flat binary string, more efficient if
         such headers are static.
         """
@@ -888,6 +895,7 @@ class WiFiManager(object):
     def scripts(self, req, resp) -> None:
         """
         Send gzipped JS content if supported by client.
+
         Shows specifying headers as a flat binary string, more efficient if
         such headers are static.
         """

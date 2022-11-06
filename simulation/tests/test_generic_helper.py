@@ -7,9 +7,11 @@ import gc
 import logging
 import os
 from nose2.tools import params
+import time
 from typing import List, Union
 import unittest
 from unittest.mock import patch, mock_open, Mock
+from random import randint
 
 # custom imports
 from generic_helper import GenericHelper
@@ -42,15 +44,55 @@ class TestGenericHelper(unittest.TestCase):
         self.assertEqual(logger.level, logging.DEBUG)
         self.assertEqual(logger.name, logger_name)
 
-    @unittest.skip("Not yet implemented")
     def test_set_level(self) -> None:
         """Test setting the logger level"""
-        pass
+        logger = GenericHelper.create_logger()
+        self.assertEqual(logger.level, logging.DEBUG)
 
-    @unittest.skip("Not yet implemented")
+        GenericHelper.set_level(logger=logger, level='debug')
+        self.assertEqual(logger.level, logging.DEBUG)
+
+        GenericHelper.set_level(logger=logger, level='info')
+        self.assertEqual(logger.level, logging.INFO)
+
+        GenericHelper.set_level(logger=logger, level='warning')
+        self.assertEqual(logger.level, logging.WARNING)
+
+        GenericHelper.set_level(logger=logger, level='error')
+        self.assertEqual(logger.level, logging.ERROR)
+
+        GenericHelper.set_level(logger=logger, level='critical')
+        self.assertEqual(logger.level, logging.CRITICAL)
+
+        GenericHelper.set_level(logger=logger, level='unknonw_level')
+        self.assertEqual(logger.level, logging.CRITICAL)
+
     def test_set_logger_verbose_level(self) -> None:
         """Test setting the logger level"""
-        pass
+        logger = GenericHelper.create_logger()
+        self.assertEqual(logger.level, logging.DEBUG)
+        self.assertFalse(logger.disabled)
+
+        # set verbose level -vv == WARNING
+        GenericHelper.set_logger_verbose_level(logger=logger,
+                                               verbose_level=2,
+                                               debug_output=True)
+        self.assertEqual(logger.level, logging.WARNING)
+
+        # disable logger output
+        logger = GenericHelper.create_logger()
+        GenericHelper.set_logger_verbose_level(logger=logger,
+                                               verbose_level=None,
+                                               debug_output=False)
+        self.assertEqual(logger.level, logging.DEBUG)
+        self.assertTrue(logger.disabled)
+
+        logger = GenericHelper.create_logger()
+        GenericHelper.set_logger_verbose_level(logger=logger,
+                                               verbose_level=None,
+                                               debug_output=True)
+        self.assertEqual(logger.level, logging.DEBUG)
+        self.assertTrue(logger.disabled)
 
     @params(
         (0),
@@ -67,6 +109,21 @@ class TestGenericHelper(unittest.TestCase):
         with patch('random.randint', return_value=expectation):
             value = GenericHelper.get_random_value()
             self.assertEqual(value, expectation)
+
+    def test_get_uuid(self) -> None:
+        """Test getting the UUID of the device"""
+        value = GenericHelper.get_uuid()
+        self.assertEqual(value, b'deadbeef')
+
+        requested_length = 10
+        value = GenericHelper.get_uuid(length=requested_length)
+        self.assertEqual(len(value), requested_length)
+        self.assertEqual(value, b'deadbeefde')
+
+        requested_length = -5
+        value = GenericHelper.get_uuid(length=requested_length)
+        self.assertEqual(len(value), abs(requested_length))
+        self.assertEqual(value, b'dbeef')
 
     @params(
         (None, 61354754048),
@@ -94,7 +151,9 @@ class TestGenericHelper(unittest.TestCase):
         :param      expectation:  The expectation
         :type       expectation:  Union[int, str]
         """
-        return_value = os.statvfs_result((4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188, 14915188, 0, 255))
+        return_value = os.statvfs_result((
+            4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188,
+            14915188, 0, 255))
 
         with patch('os.statvfs', return_value=return_value):
             result = GenericHelper.df(unit=unit)
@@ -179,6 +238,63 @@ class TestGenericHelper(unittest.TestCase):
 
         self.assertIsInstance(result, str)
         self.assertEqual(result, expectation)
+
+    def test_get_system_infos_raw(self) -> None:
+        """Test getting the system infos"""
+        mem_free_value = 10
+        mem_alloc_value = 100
+        ticks_ms_value = randint(1000, 1000 * 1000)
+        statvfs_return_value = os.statvfs_result((
+            4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188,
+            14915188, 0, 255))
+
+        expectation = {
+            'df': '59916752.000 kB',
+            'free_ram': mem_free_value,
+            'frequency': 160000000,
+            'percentage_ram': '9.09%',
+            'total_ram': mem_alloc_value + mem_free_value,
+            'uptime': ticks_ms_value
+        }
+
+        # mock all functions
+        os.statvfs = Mock(return_value=statvfs_return_value)
+        gc.mem_free = Mock(return_value=mem_free_value)
+        gc.mem_alloc = Mock(return_value=mem_alloc_value)
+        time.ticks_ms = Mock(return_value=ticks_ms_value)
+
+        sys_info = GenericHelper.get_system_infos_raw()
+        self.assertIsInstance(sys_info, dict)
+        self.assertEqual(sys_info, expectation)
+
+    def test_get_system_infos_human(self) -> None:
+        """Test getting the system infos in human readable format"""
+        # mock gc functions
+        mem_free_value = 10
+        mem_alloc_value = 100
+        ticks_ms_value = 498042
+        statvfs_return_value = os.statvfs_result((
+            4096, 4096, 61069442, 14979188, 14915188, 61069440, 14915188,
+            14915188, 0, 255))
+
+        expectation = {
+            'df': '59916752.000 kB',
+            'free_ram': '0.01 kB',
+            'frequency': '160 MHz',
+            'percentage_ram': '9.09%',
+            'total_ram': '0.11 kB',
+            'uptime': '0 days, 00:08:18'
+        }
+
+        # mock all functions
+        os.statvfs = Mock(return_value=statvfs_return_value)
+        gc.mem_free = Mock(return_value=mem_free_value)
+        gc.mem_alloc = Mock(return_value=mem_alloc_value)
+        time.ticks_ms = Mock(return_value=ticks_ms_value)
+
+        sys_info = GenericHelper.get_system_infos_human()
+        self.assertIsInstance(sys_info, dict)
+        self.assertEqual(sys_info, expectation)
 
     @params(
         (

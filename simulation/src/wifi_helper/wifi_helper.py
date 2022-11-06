@@ -23,7 +23,9 @@ from typing import (List, NamedTuple, Union)
 class WifiHelper(object):
     """docstring for WifiHelper"""
     def __init__(self):
-        self._scan_info = ['ssid', 'bssid', 'channel', 'RSSI', 'authmode', 'hidden']
+        self._scan_info = [
+            'ssid', 'bssid', 'channel', 'RSSI', 'authmode', 'hidden'
+        ]
         self._auth_modes = {
             0: "open",
             1: "WEP",
@@ -337,7 +339,9 @@ class WifiHelper(object):
             print('Unknown exception: {}'.format(e))
 
         # create dict based on scan_info and found networks
-        self._network_list = [dict(zip(self.scan_info, x)) for x in found_networks]
+        self._network_list = [
+            dict(zip(self.scan_info, x)) for x in found_networks
+        ]
 
         for net in self._network_list:
             net['quality'] = self.dbm_to_quality(dBm=net['RSSI'])
@@ -363,13 +367,14 @@ class WifiHelper(object):
         :returns:   List of NamedTuple networks
         :rtype:     List[NamedTuple]
         """
-        return [namedtuple('net', list(net.keys()))(*net.values()) for net in self._network_list]
+        return [namedtuple('net', list(net.keys()))(*net.values()) for net in self._network_list]   # noqa: E501
 
     def get_wifi_networks_sorted(self,
                                  rescan: bool = False,
                                  scan_if_empty: bool = False,
                                  as_json: bool = False,
-                                 sort_key: str = 'RSSI') -> Union[List[dict], str]:
+                                 sort_key: str = 'RSSI') -> Union[List[dict],
+                                                                  str]:
         """
         Get the available WiFi networks in sorted order.
 

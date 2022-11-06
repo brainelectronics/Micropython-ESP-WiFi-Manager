@@ -1,0 +1,53 @@
+# this file is *not* meant to cover or endorse the use of GitHub Actions, but rather to
+# help make automated releases for this project
+
+name: Upload Python Package to test.pypi.org
+
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    - name: Install build dependencies
+      run: |
+        if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
+    - name: Build package
+      run: |
+        changelog2version \
+          --changelog_file changelog.md \
+          --version_file wifi_manager/version.py \
+          --version_file_type py \
+          --additional_version_info="-rc${{ github.run_number }}.dev${{ github.event.number }}" \
+          --debug
+        python setup.py sdist
+    - name: Test built package
+      # sdist call creates non twine conform "*.orig" files, remove them
+      run: |
+        rm dist/*.orig
+        twine check dist/*.tar.gz
+    - name: Archive build package artifact
+      uses: actions/upload-artifact@v3
+      with:
+        # https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+        # ${{ github.repository }} and ${{ github.ref_name }} can't be used for artifact name due to unallowed '/'
+        name: dist_repo.${{ github.event.repository.name }}_sha.${{ github.sha }}_build.${{ github.run_number }}
+        path: dist/*.tar.gz
+        retention-days: 14
+    - name: Publish package
+      uses: pypa/gh-action-pypi-publish@release/v1.5
+      with:
+        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        skip_existing: true
+        verbose: true
+        print_hash: true

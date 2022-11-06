@@ -9,10 +9,13 @@ Collection of helper functions used in other modules
 
 import gc
 import json
-import logging
+import logging as logging
+from machine import machine
 import os
 import random
 import sys
+import time
+import binascii as ubinascii
 
 from typing import Optional, Union
 
@@ -20,7 +23,7 @@ from typing import Optional, Union
 class GenericHelper(object):
     """docstring for GenericHelper"""
     def __init__(self):
-        pass
+        pass    # pragma: no cover
 
     @staticmethod
     def create_logger(logger_name: Optional[str] = None) -> logging.Logger:
@@ -64,13 +67,15 @@ class GenericHelper(object):
         if level.lower() == 'debug':
             logger.setLevel(level=logging.DEBUG)
         elif level.lower() == 'info':
-            logger.setLevel(level=logging.DEBUG)
+            logger.setLevel(level=logging.INFO)
         elif level.lower() == 'warning':
             logger.setLevel(level=logging.WARNING)
         elif level.lower() == 'error':
             logger.setLevel(level=logging.ERROR)
         elif level.lower() == 'critical':
             logger.setLevel(level=logging.CRITICAL)
+        else:
+            pass
 
     @staticmethod
     def set_logger_verbose_level(logger: logging.Logger,
@@ -114,6 +119,30 @@ class GenericHelper(object):
         :rtype:     int
         """
         return random.randint(lower, upper)
+
+    @staticmethod
+    def get_uuid(length: Optional[int] = None) -> bytes:
+        """
+        Get the UUID of the device.
+
+        :param      length:  The length of the UUID
+        :type       length:  int, optional
+
+        :returns:   The uuid.
+        :rtype:     bytes
+        """
+        uuid = ubinascii.hexlify(machine.unique_id())
+
+        if length is not None:
+            uuid_len = len(uuid)
+            amount = abs(length) // uuid_len + (abs(length) % uuid_len > 0)
+
+            if length < 0:
+                return (uuid * amount)[length:]
+            else:
+                return (uuid * amount)[:length]
+        else:
+            return uuid
 
     @staticmethod
     def df(path: str = '//', unit: Optional[str] = None) -> Union[int, str]:
@@ -190,6 +219,56 @@ class GenericHelper(object):
                     format(memory_stats['total'] / 1024,
                            memory_stats['free'] / 1024,
                            memory_stats['percentage']))
+
+    @staticmethod
+    def get_system_infos_raw() -> dict:
+        """
+        Get the raw system infos.
+
+        :returns:   The raw system infos.
+        :rtype:     dict
+        """
+        sys_info = dict()
+        memory_info = GenericHelper.get_free_memory()
+
+        sys_info['df'] = GenericHelper.df(path='/', unit='kB')
+        sys_info['free_ram'] = memory_info['free']
+        sys_info['total_ram'] = memory_info['total']
+        sys_info['percentage_ram'] = memory_info['percentage']
+        sys_info['frequency'] = machine.freq()
+        sys_info['uptime'] = time.ticks_ms()
+
+        return sys_info
+
+    @staticmethod
+    def get_system_infos_human() -> dict:
+        """
+        Get the human formatted system infos
+
+        :returns:   The human formatted system infos.
+        :rtype:     dict
+        """
+        sys_info = dict()
+        memory_info = GenericHelper.get_free_memory()
+
+        # (year, month, mday, hour, minute, second, weekday, yearday)
+        # (0,    1,     2,    3,    4,      5,      6,       7)
+        seconds = int(time.ticks_ms() / 1000)
+        uptime = time.gmtime(seconds)
+        days = "{days:01d}".format(days=int(seconds / 86400))
+
+        sys_info['df'] = GenericHelper.df(path='/', unit='kB')
+        sys_info['free_ram'] = "{} kB".format(memory_info['free'] / 1000.0)
+        sys_info['total_ram'] = "{} kB".format(memory_info['total'] / 1000.0)
+        sys_info['percentage_ram'] = memory_info['percentage']
+        sys_info['frequency'] = "{} MHz".format(int(machine.freq() / 1000000))
+        sys_info['uptime'] = "{d} days, {hour:02d}:{min:02d}:{sec:02d}".format(
+            d=days,
+            hour=uptime[3],
+            min=uptime[4],
+            sec=uptime[5])
+
+        return sys_info
 
     @staticmethod
     def str_to_dict(data: str) -> dict:

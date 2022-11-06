@@ -16,28 +16,31 @@ establish and to get the latest available networks as JSON
 """
 
 # system packages
+import binascii as ubinascii
 from Crypto.Cipher import AES
 import gc
 import json
-from machine import machine
+from machine import machine, Timer
 from pathlib import Path
 import _thread
 import time
-# import ubinascii
 # import ucryptolib
 
 # pip installed packages
-from flask import Flask, render_template, url_for, redirect, request, jsonify, make_response
+from flask import Flask, render_template, url_for, redirect, request, \
+    jsonify, make_response
 
 # custom packages
 from generic_helper import GenericHelper
 from generic_helper import Message
-from led_helper import Neopixel
 from path_helper import PathHelper
 from wifi_helper import WifiHelper
 
 # typing natively supported on python
 from typing import List, Union
+from unittest.mock import Mock
+
+gc.collect = Mock()
 
 
 class WiFiManager(object):
@@ -50,11 +53,12 @@ class WiFiManager(object):
     def __init__(self, logger=None, quiet=False, name=__name__):
         # setup and configure logger if none is provided
         if logger is None:
-            logger = GenericHelper.create_logger(logger_name=self.__class__.__name__)
+            logger = GenericHelper.create_logger(
+                logger_name=self.__class__.__name__)
             GenericHelper.set_level(logger, 'debug')
         self.logger = logger
         self.logger.disabled = quiet
-        self._config_file = (Path(__file__).parent / '..' / '..').resolve() / 'wifi-secure.json'
+        self._config_file = (Path(__file__).parent / '..' / '..').resolve() / 'wifi-secure.json'    # noqa: E501
         print('Config file at: {}'.format(self._config_file))
 
         flask_root_folder = (Path(__file__).parent / '..' / '..').resolve()
@@ -64,9 +68,6 @@ class WiFiManager(object):
                          template_folder=template_folder,
                          static_folder=static_folder)
         self.wh = WifiHelper()
-        self.pixel = Neopixel()
-        self.pixel.color = 'yellow'
-        self.pixel.intensity = 20
 
         self.event_sinks = set()
 
@@ -76,7 +77,7 @@ class WiFiManager(object):
         # other setup and init here
         # AES key shall be 16 or 32 bytes
         required_len = 16
-        uuid = machine.unique_id()
+        uuid = ubinascii.hexlify(machine.unique_id())
         amount = required_len // len(uuid) + (required_len % len(uuid) > 0)
         self._enc_key = (uuid * amount).decode('ascii')[:required_len]
 
@@ -92,6 +93,7 @@ class WiFiManager(object):
         self._scan_net_msg = Message()
         self._scan_net_msg.set([])  # empty list, required by save_wifi_config
         self._latest_scan = None
+        self._stop_scanning_timer = None
 
         # start the WiFi scanning thread as soon as "start_config" is called
         self.scanning = False
@@ -220,7 +222,7 @@ class WiFiManager(object):
     def start_config(self) -> None:
         """Start WiFi manager accesspoint and webserver."""
         ap_name = 'WiFiManager_{}'.format(
-            GenericHelper.get_uuid(4).decode('ascii'))
+            GenericHelper.get_uuid(-4).decode('ascii'))
         self.logger.info('Starting WiFiManager as AccessPoint "{}"'.
                          format(ap_name))
         result = self.wh.create_ap(ssid=ap_name,
@@ -245,37 +247,61 @@ class WiFiManager(object):
         # wait some time to end all threads savely
         time.sleep(5)
 
-        # gc.collect()
+        gc.collect()
         self.logger.debug('Goodbye from WiFiManager')
 
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
-        self.app.add_url_rule("/", view_func=self.landing_page)
-        self.app.add_url_rule("/select", view_func=self.wifi_selection)
-        self.app.add_url_rule("/render_network_inputs",
+
+        # self.app.add_url_rule('/', func=self.index)
+        # @app.route('/index')
+        # def index(self, req, resp): pass
+        # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L251
+        self.app.add_url_rule('/', view_func=self.landing_page)
+        self.app.add_url_rule('/select', view_func=self.wifi_selection)
+        self.app.add_url_rule('/render_network_inputs',
                               view_func=self.render_network_inputs)
-        self.app.add_url_rule("/configure", view_func=self.wifi_configs)
-        self.app.add_url_rule("/save_wifi_config",
+        self.app.add_url_rule('/configure', view_func=self.wifi_configs)
+        self.app.add_url_rule('/save_wifi_config',
                               view_func=self.save_wifi_config,
                               methods=['POST', 'GET'])
-        self.app.add_url_rule("/remove_wifi_config",
+        self.app.add_url_rule('/remove_wifi_config',
                               view_func=self.remove_wifi_config,
                               methods=['POST', 'GET'])
-        self.app.add_url_rule("/scan_result", view_func=self.scan_result)
+        self.app.add_url_rule('/scan_result', view_func=self.scan_result)
 
         self.app.add_url_rule(
             "/static/css/bootstrap.min.css",
             view_func=self.styles
         )
+        self.app.add_url_rule(
+            "/static/js/toast.js",
+            view_func=self.scripts
+        )
         # regex not supported in Flask
-        # self.app.add_url_rule(re.compile('^\/(.+\.css)$'),
+        # self.app.add_url_rule(re.compile(r'^\/(.+\.css)$'),
         #                       view_func=self.styles)
+        # self.app.add_url_rule(url=re.compile(r'^\/(.+\.js)$'),
+        #                       view_func=self.scripts)
 
         available_urls = {
-            "/select": "Select WiFi network",
-            "/configure": "Manage WiFi networks",
-            "/scan_result": "Latest Scan result",
+            "/select": {
+                "title": "Select WiFi",
+                "color": "border-primary",
+                "text": "Configure WiFi networks",
+            },
+            "/configure": {
+                "title": "Manage WiFi networks",
+                "color": "border-primary",
+                "text": "Remove credentials of configured WiFi networks",
+            },
+            "/scan_result": {
+                "title": "Scan data",
+                "color": "text-white bg-info",
+                "text": "Latest WiFi scan data as JSON",
+            }
         }
+
         self.available_urls = available_urls
 
     def _encrypt_data(self, data: Union[str, list, dict]) -> bytes:
@@ -296,7 +322,7 @@ class WiFiManager(object):
         enc = AES.new(self._enc_key, AES.MODE_ECB)
 
         # add '\x00' to fill up the data string to reach a multiple of 16
-        encrypted_data = enc.encrypt(data_bytes + b'\x00' * ((16 - (len(data_bytes) % 16)) % 16))
+        encrypted_data = enc.encrypt(data_bytes + b'\x00' * ((16 - (len(data_bytes) % 16)) % 16))   # noqa: E501
 
         return encrypted_data
 
@@ -434,7 +460,6 @@ class WiFiManager(object):
         return self._configured_networks
 
     def _scan(self,
-              pixel: Neopixel,
               wh: WifiHelper,
               msg: Message,
               scan_interval: int,
@@ -442,8 +467,6 @@ class WiFiManager(object):
         """
         Scan for available networks.
 
-        :param      pixel:          Neopixel helper object
-        :type       pixel:          Neopixel
         :param      wh:             Wifi helper object
         :type       wh:             WifiHelper
         :param      msg:            The shared message from this thread
@@ -453,8 +476,6 @@ class WiFiManager(object):
         :param      lock:           The lock object
         :type       lock:           _thread.lock
         """
-        pixel.fading = True
-
         while lock.locked():
             try:
                 # rescan for available networks
@@ -468,7 +489,6 @@ class WiFiManager(object):
             except KeyboardInterrupt:
                 break
 
-        pixel.fading = False
         print('Finished scanning')
 
     @property
@@ -521,7 +541,6 @@ class WiFiManager(object):
 
             # parameters of the _scan function
             params = (
-                self.pixel,
                 self.wh,
                 self._scan_net_msg,
                 self._scan_interval,
@@ -533,16 +552,41 @@ class WiFiManager(object):
             # stop scanning if not already stopped
             self._scan_lock.release()
             self.logger.info('Scanning stoppped')
+            if isinstance(self._stop_scanning_timer, Timer):
+                self._stop_scanning_timer.deinit()
+
+    def _stop_scanning_cb(self, tim: Timer) -> None:
+        """
+        Timer callback function to stop the WiFi scan thread.
+
+        :param      tim:  The timer calling this function.
+        :type       tim:  machine.Timer
+        """
+        self.scanning = False
 
     @property
     def latest_scan(self) -> Union[List[dict], str]:
-        gc.collect()
-        # free = gc.mem_free()
-        # self.logger.debug('Free memory: {}'.format(free))
-        latest_scan_result = self._scan_net_msg.value()
-        self.logger.info('Requested latest scan result: {}'.
-                         format(latest_scan_result))
-        return latest_scan_result
+        """
+        Get lastest scanned networks.
+
+        Start scanning if not already scanning, set a oneshot timer to 10.5x
+        of @see scan_interval to stop scanning again in order to reduce CPU
+        load and avoid unused scans
+
+        :returns:   Dictionary of available networks
+        :rtype:     Union[List[dict], str]
+        """
+        if not self.scanning:
+            self.scanning = True
+
+            if self._stop_scanning_timer is None:
+                self._stop_scanning_timer = Timer(-1)
+            cb_period = int(self.scan_interval * 10 + self.scan_interval / 2)
+            self._stop_scanning_timer.init(mode=Timer.ONE_SHOT,
+                                           period=cb_period,
+                                           callback=self._stop_scanning_cb)
+
+        return self._scan_net_msg.value()
 
     def _render_index_page(self, available_pages: dict) -> str:
         """
@@ -555,10 +599,18 @@ class WiFiManager(object):
         :rtype:     str
         """
         content = ""
-        for url, description in sorted(available_pages.items(), key=lambda item: item[1]):
+
+        # sort dict by 'title' of the dict values
+        for url, info in sorted(available_pages.items(),
+                                key=lambda item: item[1]['title']):
             content += """
-            <a href="{url}" class="list-group-item list-group-item-action">{description}</a>
-            """.format(url=url, description=description)
+            <div class="col-sm-4 py-2"><div class="card h-100 {color}"><div class="card-body">
+                <h3 class="card-title">{title}</h3><p class="card-text">{text}</p>
+                <a href="{url}" class="stretched-link"></a></div></div></div>
+            """.format(color=info['color'],     # noqa: E501
+                       title=info['title'],
+                       text=info['text'],
+                       url=url)
 
         return content
 
@@ -590,7 +642,7 @@ class WiFiManager(object):
                     Signal quality {quality}&#37;, BSSID {bssid}
                   </span>
                 </label>
-                """.format(bssid=ele['bssid'],
+                """.format(bssid=ele['bssid'],  # noqa: E501
                            state=selected,
                            ssid=ele['ssid'],
                            quality=ele['quality'])
@@ -801,7 +853,9 @@ class WiFiManager(object):
 
         self._remove_wifi_config(form_data=form_data)
 
-        return redirect(url_for('landing_page'))
+        # redirect to '/configure'
+        headers = {'Location': '/configure'}    # noqa: F841
+        return redirect(url_for('wifi_configs'))
 
     # @app.route(re.compile('^\/(.+\.css)$'))
     def styles(self):
@@ -821,11 +875,32 @@ class WiFiManager(object):
 
         complete_file_path = file_path
         self.logger.debug('Accessed file {}'.format(complete_file_path))
-        self.logger.warning('Connection result: {}'.
-                            format(self._connection_result))
         return self.sendfile(writer=request,
                              fname=complete_file_path,
                              content_type='text/css',
+                             headers=headers)
+
+    # @app.route(re.compile('^\/(.+\.js)$'))
+    def scripts(self) -> None:
+        """
+        Send gzipped JS content if supported by client.
+
+        Shows specifying headers as a flat binary string, more efficient if
+        such headers are static.
+        """
+        file_path = str(request.url_rule)
+        headers = b'Cache-Control: max-age=86400\r\n'
+
+        if 'gzip' in str(request.headers):
+            self.logger.debug('gzip accepted for JS script file')
+            file_path += '.gz'
+            headers += b'Content-Encoding: gzip\r\n'
+
+        complete_file_path = file_path
+        self.logger.debug('Accessed file {}'.format(complete_file_path))
+        return self.sendfile(writer=request,
+                             fname=complete_file_path,
+                             content_type='text/javascript',
                              headers=headers)
 
     def sendfile(self,
@@ -845,7 +920,8 @@ class WiFiManager(object):
         :param      writer:        The writer
         :type       writer:        Optional
         """
-        flask_root_folder = (Path(__file__).parent / '..' / '..' / '..').resolve()
+        here = Path(__file__).parent
+        flask_root_folder = (here / '..' / '..' / '..').resolve()
         file_path = str(flask_root_folder) + str(fname)
 
         self.logger.debug('Open file {}'.format(file_path))
@@ -865,7 +941,8 @@ class WiFiManager(object):
     def run(self,
             host: str = '0.0.0.0',
             port: int = 80,
-            debug: bool = False) -> None:
+            debug: bool = False,
+            log=None) -> None:
         """
         Run the web application
 
@@ -876,6 +953,8 @@ class WiFiManager(object):
         :param      debug:  Flag to automatically reload for code changes and
                             show debugger content
         :type       debug:  bool, optional
+        :param      log:    Logger of Picoweb
+        :type       log:    logging.Logger
         """
         self.logger.debug('Run app on {}:{} with debug: {}'.format(host,
                                                                    port,
@@ -883,7 +962,7 @@ class WiFiManager(object):
         try:
             # self.app.run()
             self.app.run(debug=debug)
-            # self.app.run(host=host, port=port, debug=debug)
+            # self.app.run(host=host, port=port, debug=debug, log=log)
         except KeyboardInterrupt:
             self.logger.debug('Catched KeyboardInterrupt at run of web app')
         except Exception as e:

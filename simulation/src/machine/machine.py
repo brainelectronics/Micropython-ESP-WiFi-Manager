@@ -6,6 +6,7 @@ Fake Micropython Machine class
 
 See https://docs.micropython.org/en/latest/library/machine.html
 """
+import binascii
 
 
 class machine(object):
@@ -22,8 +23,30 @@ class machine(object):
 
     @staticmethod
     def reset_cause() -> int:
+        """
+        Get last reset cause
+
+        :returns:   Reset cause
+        :rtype:     int
+        """
         return machine.SOFT_RESET
 
     @staticmethod
     def unique_id() -> bytes:
-        return b'DEADBEEF'
+        """
+        Get unique device ID
+
+        :returns:   Device ID
+        :rtype:     bytes
+        """
+        return binascii.unhexlify(b'DEADBEEF')
+
+    @staticmethod
+    def freq() -> int:
+        """
+        Get current CPU frequency
+
+        :returns:   CPU frequency in Hz
+        :rtype:     int
+        """
+        return 160 * 1000 * 1000

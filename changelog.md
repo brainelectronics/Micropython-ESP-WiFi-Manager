@@ -12,10 +12,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 ### Fixed
 -->
+<!--
+RegEx for release version from file
+r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
+-->
 
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.8.0] - 2022-11-06
+### Added
+- Deploy to [Test Python Package Index](https://test.pypi.org/) on every PR
+  build with a [PEP440][ref-pep440] compliant `-rc<BUILDNUMBER>.dev<PR_NUMBER>`
+  meta data extension
+- [Test release workflow](.github/workflows/test-release.yaml) running only on
+  PRs is archiving and uploading built artifacts to
+  [Test Python Package Index](https://test.pypi.org/)
+- Added missing functions `get_uuid`, `get_system_infos_raw` and
+  `get_system_infos_human` to `generic_helper` simulation files, see
+  [#16][ref-issue-16]
+- Added `Led` class to `led_helper` simulation file, see [#16][ref-issue-16]
+- Added missing function `freq` to `machine` simulation file, see
+  [#16][ref-issue-16]
+- Increased coverage of simulation unittests, relates to [#16][ref-issue-16]
+- Script to [create report directories](simulation/create_report_dirs.py) for
+  [simulation unittests](simulation/tests) results
+- Requirements files for deploy and test setup. Link with simulation
+  requirements
+- Script to [create report directories](simulation/create_report_dirs.py) for
+  simulation unittests
+- Implement `RTC` class of `rtc` simulation file, see [#16][ref-issue-16]
+- Implement `Timer` class of `timer` simulation file, see [#16][ref-issue-16]
+- Add all missing functions of `time_helper` simulation file,
+  see [#16][ref-issue-16]
+- Added missing function `value`, `on` and `off` to `pin` simulation file, see
+  [#16][ref-issue-16]
+
+### Changed
+- Author is explicitly mentioned in [`setup.py`](setup.py) instead of used by
+  `__author__` variable which has been previously defined in
+  [`version.py`](wifi_manager/version.py) but no longer available with
+  autodeploy.
+- Print source code of flake8 warnings in stdout
+- `unique_id` of `machine` simulation returns binary data represented by the
+  hexadecimal string `DEADBEEF` instead of binary string only
+- Update test data files after hexlified machine unique ID change
+- Update simulation template files to latest MicroPython implementation, see
+  [#16][ref-issue-16]
+
+### Removed
+- `.flake8` definition file of [`simulation`](simulation)
+
+### Fixed
+- All uncovered flake8 warnings of [`wifi_manager`](wifi_manager) and
+  [`simulation`](simulation), see [#25][ref-issue-25]
+- Logger level is set to `INFO` instead of `DEBUG` if `info` is specified
+- Undefined `_bssid` replaced with `_essid` in `network` simulation test
+
 ## [1.7.1] - 2022-05-06
 ### Fixed
 - `start_config` creates an AccessPoint named `WiFiManager_xxxx` with `xxxx`
@@ -178,8 +231,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.7.1...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.8.0...develop
 
+[1.8.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.8.0
 [1.7.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.1
 [1.7.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.0
 [1.6.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.6.0
@@ -192,6 +246,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
 
+[ref-issue-16]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/16
+[ref-issue-25]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/25
+[ref-pep440]: https://peps.python.org/pep-0440/
 [ref-issue-21]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/21
 [ref-issue-18]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/18
 [ref-issue-19]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/19

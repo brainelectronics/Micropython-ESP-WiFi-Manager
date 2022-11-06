@@ -4,3 +4,4 @@
 from .machine import machine
 from .pin import Pin
 from .rtc import RTC
+from .timer import Timer, TimerError

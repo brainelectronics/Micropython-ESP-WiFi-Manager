@@ -4,32 +4,46 @@
 ![Release](https://img.shields.io/github/v/release/brainelectronics/micropython-esp-wifi-manager?include_prereleases&color=success)
 ![MicroPython](https://img.shields.io/badge/micropython-Ok-green.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/brainelectronics/micropython-esp-wifi-manager/actions/workflows/release.yml/badge.svg)](https://github.com/brainelectronics/micropython-esp-wifi-manager/actions/workflows/release.yml)
 
 MicroPython WiFi Manager to configure and connect to networks
 
 -----------------------
 
+<!-- MarkdownTOC -->
 
-## Setup
+- [Installation](#installation)
+	- [Install required tools](#install-required-tools)
+	- [Flash firmware](#flash-firmware)
+	- [Upload files to board](#upload-files-to-board)
+		- [Install package with pip](#install-package-with-pip)
+		- [Manually](#manually)
+			- [Upload files to board](#upload-files-to-board-1)
+			- [Install additional MicroPython packages](#install-additional-micropython-packages)
+- [Usage](#usage)
 
-The [esptool][ref-esptool] is required to flash the micropython firmware onto
-the device.
+<!-- /MarkdownTOC -->
 
-For interaction with the filesystem of the device the
-[Remote MicroPython shell][ref-remote-upy-shell] can be used.
+## Installation
 
-### Installation
+### Install required tools
 
-Install both python packages with the following command in a virtual
-environment to avoid any conflicts with other packages installed on your local
-system.
+Python3 must be installed on your system. Check the current Python version
+with the following command
+
+```bash
+python --version
+python3 --version
+```
+
+Depending on which command `Python 3.x.y` (with x.y as some numbers) is
+returned, use that command to proceed.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 
-pip install esptool
-pip install rshell
+pip install -r requirements.txt
 ```
 
 Test both tools by showing their man/help info description.
@@ -58,7 +72,7 @@ is no external PRSAM only the non SPIRAM version is working.
 
 #### Install package with pip
 
-Connect to a network
+Connect your MicroPython board to a network
 
 ```python
 import network
