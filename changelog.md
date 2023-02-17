@@ -20,6 +20,15 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.9.0] - 2023-02-17
+### Added
+- `test-release` and `release` workflows create changelog based (pre-)releases
+- Copy of [`microdot 1.2.1`](https://github.com/miguelgrinberg/microdot/releases/tag/v1.2.1) provided with this package
+- brainelectronics favicon is shown on all pages
+
+### Changed
+- Replace `picoweb` with `microdot`
+
 ## [1.8.0] - 2022-11-06
 ### Added
 - Deploy to [Test Python Package Index](https://test.pypi.org/) on every PR
@@ -231,8 +240,9 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.8.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.9.0...develop
 
+[1.9.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.9.0
 [1.8.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.8.0
 [1.7.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.1
 [1.7.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.0
