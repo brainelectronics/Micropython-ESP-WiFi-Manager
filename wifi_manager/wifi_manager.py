@@ -245,10 +245,10 @@ class WiFiManager(object):
         gc.collect()
         self.logger.debug('Goodbye from WiFiManager')
 
-    def add_app_route(self,
-                      url: str,
-                      func: Callable[[Request], None],
-                      methods: Tuple[str, ...] = ['GET']) -> None:
+    def add_url_rule(self,
+                     url: str,
+                     func: Callable[[Request], None],
+                     methods: Tuple[str, ...] = ['GET']) -> None:
         """
         Register a function as a request handler for a given URL
 
@@ -266,22 +266,22 @@ class WiFiManager(object):
 
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
-        self.add_app_route(url='/', func=self.landing_page)
-        self.add_app_route(url='/select', func=self.wifi_selection)
-        self.add_app_route(url='/render_network_inputs',
-                           func=self.render_network_inputs)
-        self.add_app_route(url='/configure', func=self.wifi_configs)
-        self.add_app_route(url='/save_wifi_config',
-                           func=self.save_wifi_config,
-                           methods=['POST'])
-        self.add_app_route(url='/remove_wifi_config',
-                           func=self.remove_wifi_config,
-                           methods=['POST'])
-        self.add_app_route(url='/scan_result', func=self.scan_result)
+        self.add_url_rule(url='/', func=self.landing_page)
+        self.add_url_rule(url='/select', func=self.wifi_selection)
+        self.add_url_rule(url='/render_network_inputs',
+                          func=self.render_network_inputs)
+        self.add_url_rule(url='/configure', func=self.wifi_configs)
+        self.add_url_rule(url='/save_wifi_config',
+                          func=self.save_wifi_config,
+                          methods=['POST'])
+        self.add_url_rule(url='/remove_wifi_config',
+                          func=self.remove_wifi_config,
+                          methods=['POST'])
+        self.add_url_rule(url='/scan_result', func=self.scan_result)
 
-        self.add_app_route(url=r'<re:(.*)\.css|(.*)\.js:path>',
-                           func=self.serve_static)
-        self.add_app_route(url='/favicon.ico', func=self.serve_favicon)
+        self.add_url_rule(url=r'<re:(.*)\.css|(.*)\.js:path>',
+                          func=self.serve_static)
+        self.add_url_rule(url='/favicon.ico', func=self.serve_favicon)
 
         self.app.error_handlers[404] = self.not_found
 
