@@ -34,7 +34,10 @@ setup(
     },
     license='MIT',
     cmdclass={'sdist': sdist_upip.sdist},
-    packages=['wifi_manager'],
+    packages=[
+        'wifi_manager',
+        'microdot',
+    ],
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/distutils/setupscript.html#installing-additional-files
@@ -61,7 +64,6 @@ setup(
         )
     ],
     install_requires=[
-        'picoweb',
         'micropython-ulogging',
         'micropython-brainelectronics-helpers',
         'utemplate',
