@@ -25,9 +25,10 @@ import ubinascii
 import ucryptolib
 
 # pip installed packages
-import picoweb
-# https://github.com/pfalcon/picoweb
-import ure as re
+# https://github.com/miguelgrinberg/microdot
+from microdot import Microdot, redirect, Request, Response, send_file, \
+    URLPattern
+from microdot.microdot_utemplate import render_template, init_templates
 
 # custom packages
 from be_helpers.generic_helper import GenericHelper
@@ -36,7 +37,7 @@ from be_helpers.path_helper import PathHelper
 from be_helpers.wifi_helper import WifiHelper
 
 # typing not natively supported on micropython
-from be_helpers.typing import List, Union
+from be_helpers.typing import List, Tuple, Union, Callable
 
 
 class WiFiManager(object):
@@ -45,6 +46,8 @@ class WiFiManager(object):
     SUCCESS = 1
     CONNECTION_ISSUE_TIMEOUT = 1
     CONNECTION_ISSUE_NOT_CONFIGURED = 2
+
+    Response.default_content_type = 'text/html'
 
     def __init__(self, logger=None, quiet=False, name=__name__):
         # setup and configure logger if none is provided
@@ -56,7 +59,9 @@ class WiFiManager(object):
         self.logger.disabled = quiet
         self._config_file = 'wifi-secure.json'
 
-        self.app = picoweb.WebApp(pkg='/lib')
+        self.app = Microdot()
+        init_templates(template_dir='lib/templates')
+
         self.wh = WifiHelper()
 
         self.event_sinks = set()
@@ -240,28 +245,45 @@ class WiFiManager(object):
         gc.collect()
         self.logger.debug('Goodbye from WiFiManager')
 
+    def add_app_route(self,
+                      url: str,
+                      func: Callable[[Request], None],
+                      methods: Tuple[str, ...] = ['GET']) -> None:
+        """
+        Register a function as a request handler for a given URL
+
+        :param      url:       URL pattern
+        :type       url:       str
+        :param      func:      The function to be called
+        :type       func:      Callable[[Request], None]
+        :param      methods:   HTTP methods handled by the function
+        :type       methods:   Tuple[str, ...]
+        """
+        # @app.route('/')
+        # def index(self, req): pass
+        # https://github.com/miguelgrinberg/microdot/blob/81394980234f24aac834faf8e2e8225231e9014b/src/microdot.py#L785-L786
+        self.app.url_map.append((methods, URLPattern(url), func))
+
     def _add_app_routes(self) -> None:
         """Add all application routes to the webserver."""
+        self.add_app_route(url='/', func=self.landing_page)
+        self.add_app_route(url='/select', func=self.wifi_selection)
+        self.add_app_route(url='/render_network_inputs',
+                           func=self.render_network_inputs)
+        self.add_app_route(url='/configure', func=self.wifi_configs)
+        self.add_app_route(url='/save_wifi_config',
+                           func=self.save_wifi_config,
+                           methods=['POST'])
+        self.add_app_route(url='/remove_wifi_config',
+                           func=self.remove_wifi_config,
+                           methods=['POST'])
+        self.add_app_route(url='/scan_result', func=self.scan_result)
 
-        # self.app.add_url_rule(url='/', func=self.index)
-        # @app.route('/index')
-        # def index(self, req, resp): pass
-        # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L251
-        self.app.add_url_rule(url='/', func=self.landing_page)
-        self.app.add_url_rule(url='/select', func=self.wifi_selection)
-        self.app.add_url_rule(url='/render_network_inputs',
-                              func=self.render_network_inputs)
-        self.app.add_url_rule(url='/configure', func=self.wifi_configs)
-        self.app.add_url_rule(url='/save_wifi_config',
-                              func=self.save_wifi_config)
-        self.app.add_url_rule(url='/remove_wifi_config',
-                              func=self.remove_wifi_config)
-        self.app.add_url_rule(url='/scan_result', func=self.scan_result)
+        self.add_app_route(url=r'<re:(.*)\.css|(.*)\.js:path>',
+                           func=self.serve_static)
+        self.add_app_route(url='/favicon.ico', func=self.serve_favicon)
 
-        self.app.add_url_rule(url=re.compile(r'^\/(.+\.css)$'),
-                              func=self.styles)
-        self.app.add_url_rule(url=re.compile(r'^\/(.+\.js)$'),
-                              func=self.scripts)
+        self.app.error_handlers[404] = self.not_found
 
         available_urls = {
             "/select": {
@@ -745,8 +767,8 @@ class WiFiManager(object):
     # -------------------------------------------------------------------------
     # Webserver functions
 
-    # @app.route('/landing_page')
-    def landing_page(self, req, resp) -> None:
+    # @app.route('/')
+    def landing_page(self, req: Request) -> None:
         """
         Provide landing page aka index page
 
@@ -756,24 +778,16 @@ class WiFiManager(object):
         available_pages = self.available_urls
         content = self._render_index_page(available_pages)
 
-        yield from picoweb.start_response(resp)
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='index.tpl',
-                                            args=(req, content, ))
+        return render_template(template='index.tpl', req=None, content=content)
 
-    # @app.route("/scan_result")
-    def scan_result(self, req, resp) -> None:
+    # @app.route('/scan_result')
+    def scan_result(self, req: Request) -> None:
         """Provide latest found networks as JSON"""
-        yield from picoweb.start_response(writer=resp,
-                                          content_type="application/json")
+        # https://microdot.readthedocs.io/en/latest/intro.html#json-responses
+        return self.latest_scan
 
-        encoded = json.dumps(self.latest_scan)
-        yield from resp.awrite(encoded)
-        # https://github.com/pfalcon/picoweb/blob/b74428ebdde97ed1795338c13a3bdf05d71366a0/picoweb/__init__.py#L39
-        # yield from resp.jsonify(self.latest_scan)
-
-    # @app.route("/select")
-    def wifi_selection(self, req, resp) -> None:
+    # @app.route('/select')
+    def wifi_selection(self, req: Request) -> None:
         """
         Provide webpage to select WiFi network from list of available networks
 
@@ -791,24 +805,20 @@ class WiFiManager(object):
         # self.logger.info('Stopping scanning thread')
         # self.scanning = False
 
-        yield from picoweb.start_response(resp)
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='select.tpl',
-                                            args=(req, content, ))
+        return render_template(template='select.tpl', req=0, content=content)
 
-    # @app.route("/render_network_inputs")
-    def render_network_inputs(self, req, resp) -> str:
+    # @app.route('/render_network_inputs')
+    def render_network_inputs(self, req: Request) -> str:
         """Return rendered network inputs content to webpage"""
         available_nets = self.latest_scan
         selected_bssid = self._selected_network_bssid
         content = self._render_network_inputs(available_nets=available_nets,
                                               selected_bssid=selected_bssid)
 
-        yield from picoweb.start_response(resp)
-        yield from resp.awrite(content)
+        return content
 
-    # @app.route("/configure")
-    def wifi_configs(self, req, resp) -> None:
+    # @app.route('/configure')
+    def wifi_configs(self, req: Request) -> None:
         """Provide webpage with table of configured networks"""
         configured_nets = self.configured_networks
         self.logger.debug('Existing config content: {}'.
@@ -817,23 +827,14 @@ class WiFiManager(object):
         if isinstance(configured_nets, str):
             configured_nets = [configured_nets]
 
-        yield from picoweb.start_response(resp)
-        yield from self.app.render_template(writer=resp,
-                                            tmpl_name='remove.tpl',
-                                            args=(req,
-                                                  configured_nets,
-                                                  'disabled'))
+        return render_template(template='remove.tpl',
+                               req=None,
+                               wifi_nets=configured_nets,
+                               button_mode='disabled')
 
-    # @app.route("/save_wifi_config")
-    def save_wifi_config(self, req, resp) -> None:
+    # @app.route('/save_wifi_config')
+    def save_wifi_config(self, req: Request) -> None:
         """Process saving the specified WiFi network to the WiFi config file"""
-        if req.method == 'POST':
-            yield from req.read_form_data()
-        else:  # GET, apparently
-            # Note: parse_qs() is not a coroutine, but a normal function.
-            # But you can call it using yield from too.
-            req.parse_qs()
-
         form_data = req.form
 
         # Whether form data comes from GET or POST request, once parsed,
@@ -844,81 +845,67 @@ class WiFiManager(object):
         self._save_wifi_config(form_data=form_data)
 
         # empty response to avoid any redirects or errors due to none response
-        yield from picoweb.start_response(resp, status='204')
+        return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
 
-    # @app.route("/remove_wifi_config")
-    def remove_wifi_config(self, req, resp) -> None:
+    # @app.route('/remove_wifi_config')
+    def remove_wifi_config(self, req: Request) -> None:
         """Remove a network from the list of configured networks"""
-        if req.method == 'POST':
-            yield from req.read_form_data()
-        else:  # GET, apparently
-            # Note: parse_qs() is not a coroutine, but a normal function.
-            # But you can call it using yield from too.
-            req.parse_qs()
-
-        # Whether form data comes from GET or POST request, once parsed,
-        # it's available as req.form dictionary
         form_data = req.form
+
         self.logger.info('Remove networks: {}'.format(form_data))
         # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
 
         self._remove_wifi_config(form_data=form_data)
 
         # redirect to '/configure'
-        headers = {'Location': '/configure'}
-        yield from picoweb.start_response(resp, status='303', headers=headers)
+        return redirect('/configure')
 
-    # @app.route(re.compile('^\/(.+\.css)$'))
-    def styles(self, req, resp) -> None:
-        """
-        Send gzipped CSS content if supported by client.
+    # @app.route('/static/<path:path>')
+    def serve_static(self,
+                     req: Request,
+                     path: str) -> Union[str,
+                                         Tuple[str, int],
+                                         Tuple[str, int, dict]]:
+        if '..' in path:
+            # directory traversal is not allowed
+            return 'Not found', 404
 
-        Shows specifying headers as a flat binary string, more efficient if
-        such headers are static.
-        """
-        file_path = req.url_match.group(1)
-        headers = b'Cache-Control: max-age=86400\r\n'
+        response_header = {
+            'Cache-Control': 'max-age=86400',
+        }
 
-        if b'gzip' in req.headers.get(b'Accept-Encoding', b''):
-            self.logger.debug('gzip accepted for CSS style file')
-            file_path += '.gz'
-            headers += b'Content-Encoding: gzip\r\n'
+        ext = path.split('.')[-1]
+        complete_file_path = '/lib/' + 'static/' + ext + '/' + path
 
-        complete_file_path = 'static/css/' + file_path
-        self.logger.debug('Accessed file {}'.format(complete_file_path))
-        yield from self.app.sendfile(writer=resp,
-                                     fname=complete_file_path,
-                                     content_type='text/css',
-                                     headers=headers)
+        response_header['Content-Type'] = Response.types_map.get(
+            ext, 'application/octet-stream')
 
-    # @app.route(re.compile('^\/(.+\.js)$'))
-    def scripts(self, req, resp) -> None:
-        """
-        Send gzipped JS content if supported by client.
+        if 'gzip' in req.headers.get('Accept-Encoding', ''):
+            self.logger.debug('gzip accepted for {} file'.format(ext))
+            complete_file_path += '.gz'
+            response_header['Content-Encoding'] = 'gzip'
 
-        Shows specifying headers as a flat binary string, more efficient if
-        such headers are static.
-        """
-        file_path = req.url_match.group(1)
-        headers = b'Cache-Control: max-age=86400\r\n'
+        self.logger.debug('Send file {}'.format(complete_file_path))
+        self.logger.debug('Response header {}'.format(response_header))
 
-        if b'gzip' in req.headers.get(b'Accept-Encoding', b''):
-            self.logger.debug('gzip accepted for JS script file')
-            file_path += '.gz'
-            headers += b'Content-Encoding: gzip\r\n'
+        f = open(complete_file_path, 'rb')
 
-        complete_file_path = 'static/js/' + file_path
-        self.logger.debug('Accessed file {}'.format(complete_file_path))
-        yield from self.app.sendfile(writer=resp,
-                                     fname=complete_file_path,
-                                     content_type='text/javascript',
-                                     headers=headers)
+        return f, 200, response_header
+
+    # @app.route("/favicon.ico")
+    def serve_favicon(self, req: Request) -> None:
+        # return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
+        return send_file(filename='/lib/static/favicon.ico',
+                         status_code=200,
+                         content_type='image/x-icon')
+
+    def not_found(self, req: Request) -> None:
+        return {'error': 'resource not found'}, 404
 
     def run(self,
             host: str = '0.0.0.0',
             port: int = 80,
-            debug: bool = False,
-            log=None) -> None:
+            debug: bool = False) -> None:
         """
         Run the web application
 
@@ -929,8 +916,6 @@ class WiFiManager(object):
         :param      debug:  Flag to automatically reload for code changes and
                             show debugger content
         :type       debug:  bool, optional
-        :param      log:    Logger of Picoweb
-        :type       log:    logging.Logger
         """
         self.logger.debug('Run app on {}:{} with debug: {}'.format(host,
                                                                    port,
@@ -938,7 +923,7 @@ class WiFiManager(object):
         try:
             # self.app.run()
             # self.app.run(debug=debug)
-            self.app.run(host=host, port=port, debug=debug, log=log)
+            self.app.run(host=host, port=port, debug=debug)
         except KeyboardInterrupt:
             self.logger.debug('Catched KeyboardInterrupt at run of web app')
         except Exception as e:

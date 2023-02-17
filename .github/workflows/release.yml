@@ -9,14 +9,14 @@ on:
       - develop
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
@@ -41,3 +41,16 @@ jobs:
         skip_existing: true
         verbose: true
         print_hash: true
+    - name: 'Create changelog based release'
+      uses: brainelectronics/changelog-based-release@v1
+      with:
+        # note you'll typically need to create a personal access token
+        # with permissions to create releases in the other repo
+        # or you set the "contents" permissions to "write" as in this example
+        changelog-path: changelog.md
+        tag-name-prefix: ''
+        tag-name-extension: ''
+        release-name-prefix: ''
+        release-name-extension: ''
+        draft-release: true
+        prerelease: false
