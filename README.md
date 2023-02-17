@@ -95,7 +95,6 @@ upip.install('micropython-esp-wifi-manager')
 # installed if they are not available from test.pypi.org, may install them
 # manually
 # upip.index_urls = ["https://micropython.org/pi", "https://pypi.org/pypi"]
-# upip.install('picoweb')
 # upip.install('micropython-ulogging')
 # upip.install('utemplate')
 ```
@@ -120,6 +119,7 @@ device and increase the performance (webpages are loading faster)
 
 ```bash
 mkdir /pyboard/lib/
+mkdir /pyboard/lib/microdot/
 mkdir /pyboard/lib/wifi_manager/
 mkdir /pyboard/lib/wifi_manager/static/
 mkdir /pyboard/lib/wifi_manager/static/css
@@ -135,7 +135,8 @@ mkdir /pyboard/lib/wifi_manager/templates/
 cp templates/* /pyboard/lib/wifi_manager/templates/
 # around 20kB
 
-cp wifi_manager/wifi_manager.py /pyboard/lib/wifi_manager/
+cp wifi_manager/* /pyboard/lib/wifi_manager/
+cp microdot/* /pyboard/lib/microdot/
 cp main.py /pyboard
 cp boot.py /pyboard
 # around 40kB
@@ -150,7 +151,6 @@ device, connect to a network and install them via `upip` as follows
 ```python
 import upip
 
-upip.install('picoweb')
 upip.install('utemplate')
 upip.install('micropython-ulogging')
 upip.install('micropython-brainelectronics-helper')
