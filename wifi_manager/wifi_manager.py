@@ -26,8 +26,9 @@ import ucryptolib
 
 # pip installed packages
 # https://github.com/miguelgrinberg/microdot
-from microdot import Microdot, redirect, Request, Response, send_file, \
-    URLPattern
+from microdot.microdot_asyncio import Microdot, redirect, Request, Response, \
+    send_file
+from microdot import URLPattern
 from microdot.microdot_utemplate import render_template, init_templates
 
 # custom packages
@@ -282,6 +283,8 @@ class WiFiManager(object):
         self.add_url_rule(url=r'<re:(.*)\.css|(.*)\.js:path>',
                           func=self.serve_static)
         self.add_url_rule(url='/favicon.ico', func=self.serve_favicon)
+
+        self.add_url_rule(url='/shutdown', func=self.shutdown)
 
         self.app.error_handlers[404] = self.not_found
 
@@ -768,7 +771,7 @@ class WiFiManager(object):
     # Webserver functions
 
     # @app.route('/')
-    def landing_page(self, req: Request) -> None:
+    async def landing_page(self, req: Request) -> None:
         """
         Provide landing page aka index page
 
@@ -776,18 +779,18 @@ class WiFiManager(object):
         @see available_urls property
         """
         available_pages = self.available_urls
-        content = self._render_index_page(available_pages)
+        content = await self._render_index_page(available_pages)
 
         return render_template(template='index.tpl', req=None, content=content)
 
     # @app.route('/scan_result')
-    def scan_result(self, req: Request) -> None:
+    async def scan_result(self, req: Request) -> None:
         """Provide latest found networks as JSON"""
         # https://microdot.readthedocs.io/en/latest/intro.html#json-responses
         return self.latest_scan
 
     # @app.route('/select')
-    def wifi_selection(self, req: Request) -> None:
+    async def wifi_selection(self, req: Request) -> None:
         """
         Provide webpage to select WiFi network from list of available networks
 
@@ -797,7 +800,9 @@ class WiFiManager(object):
         0.02sec to complete
         """
         available_nets = self.latest_scan
-        content = self._render_network_inputs(available_nets=available_nets)
+        content = await self._render_network_inputs(
+            available_nets=available_nets
+        )
 
         # do not stop scanning as page is updating scan results on the fly
         # with XMLHTTP requests to @see scan_result
@@ -808,17 +813,19 @@ class WiFiManager(object):
         return render_template(template='select.tpl', req=0, content=content)
 
     # @app.route('/render_network_inputs')
-    def render_network_inputs(self, req: Request) -> str:
+    async def render_network_inputs(self, req: Request) -> str:
         """Return rendered network inputs content to webpage"""
         available_nets = self.latest_scan
         selected_bssid = self._selected_network_bssid
-        content = self._render_network_inputs(available_nets=available_nets,
-                                              selected_bssid=selected_bssid)
+        content = await self._render_network_inputs(
+            available_nets=available_nets,
+            selected_bssid=selected_bssid
+        )
 
         return content
 
     # @app.route('/configure')
-    def wifi_configs(self, req: Request) -> None:
+    async def wifi_configs(self, req: Request) -> None:
         """Provide webpage with table of configured networks"""
         configured_nets = self.configured_networks
         self.logger.debug('Existing config content: {}'.
@@ -833,7 +840,7 @@ class WiFiManager(object):
                                button_mode='disabled')
 
     # @app.route('/save_wifi_config')
-    def save_wifi_config(self, req: Request) -> None:
+    async def save_wifi_config(self, req: Request) -> None:
         """Process saving the specified WiFi network to the WiFi config file"""
         form_data = req.form
 
@@ -842,30 +849,30 @@ class WiFiManager(object):
         self.logger.info('WiFi user input content: {}'.format(form_data))
         # {'ssid': '', 'wifi_network': 'a0f3c1fbfc3c', 'password': 'qwertz'}
 
-        self._save_wifi_config(form_data=form_data)
+        await self._save_wifi_config(form_data=form_data)
 
         # empty response to avoid any redirects or errors due to none response
         return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
 
     # @app.route('/remove_wifi_config')
-    def remove_wifi_config(self, req: Request) -> None:
+    async def remove_wifi_config(self, req: Request) -> None:
         """Remove a network from the list of configured networks"""
         form_data = req.form
 
         self.logger.info('Remove networks: {}'.format(form_data))
         # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
 
-        self._remove_wifi_config(form_data=form_data)
+        await self._remove_wifi_config(form_data=form_data)
 
         # redirect to '/configure'
         return redirect('/configure')
 
     # @app.route('/static/<path:path>')
-    def serve_static(self,
-                     req: Request,
-                     path: str) -> Union[str,
-                                         Tuple[str, int],
-                                         Tuple[str, int, dict]]:
+    async def serve_static(self,
+                           req: Request,
+                           path: str) -> Union[str,
+                                               Tuple[str, int],
+                                               Tuple[str, int, dict]]:
         if '..' in path:
             # directory traversal is not allowed
             return 'Not found', 404
@@ -892,14 +899,21 @@ class WiFiManager(object):
 
         return f, 200, response_header
 
-    # @app.route("/favicon.ico")
-    def serve_favicon(self, req: Request) -> None:
+    # @app.route('/favicon.ico')
+    async def serve_favicon(self, req: Request) -> None:
         # return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
         return send_file(filename='/lib/static/favicon.ico',
                          status_code=200,
                          content_type='image/x-icon')
 
-    def not_found(self, req: Request) -> None:
+    # @app.route('/shutdown')
+    async def shutdown(self, req: Request) -> None:
+        """Shutdown webserver"""
+        req.app.shutdown()
+
+        return 'The server is shutting down...'
+
+    async def not_found(self, req: Request) -> None:
         return {'error': 'resource not found'}, 404
 
     def run(self,

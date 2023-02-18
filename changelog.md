@@ -20,6 +20,14 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.10.0] - 2023-02-18
+### Added
+- `microdot_asyncio` in `microdot` folder
+- `/shutdown` endpoint to stop webserver
+
+### Changed
+- All webserver functions are `async`, see #28
+
 ## [1.9.0] - 2023-02-17
 ### Added
 - `test-release` and `release` workflows create changelog based (pre-)releases
@@ -240,8 +248,9 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.9.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.10.0...develop
 
+[1.10.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.10.0
 [1.9.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.9.0
 [1.8.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.8.0
 [1.7.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.7.1
