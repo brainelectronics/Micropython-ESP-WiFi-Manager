@@ -26,7 +26,7 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `/shutdown` endpoint to stop webserver
 
 ### Changed
-- All webserver functions are `async`, see [#28][ref-issue-28]
+- All webserver functions are `async`, see #28
 
 ## [1.9.0] - 2023-02-17
 ### Added
@@ -265,7 +265,6 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 [0.1.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.1
 [0.1.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/0.1.0
 
-[ref-issue-28]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/28
 [ref-issue-16]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/16
 [ref-issue-25]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/issues/25
 [ref-pep440]: https://peps.python.org/pep-0440/
