@@ -284,6 +284,8 @@ class WiFiManager(object):
                           func=self.serve_static)
         self.add_url_rule(url='/favicon.ico', func=self.serve_favicon)
 
+        self.add_url_rule(url='/shutdown', func=self.shutdown)
+
         self.app.error_handlers[404] = self.not_found
 
         available_urls = {
@@ -903,6 +905,13 @@ class WiFiManager(object):
         return send_file(filename='/lib/static/favicon.ico',
                          status_code=200,
                          content_type='image/x-icon')
+
+    # @app.route('/shutdown')
+    async def shutdown(self, req: Request) -> None:
+        """Shutdown webserver"""
+        req.app.shutdown()
+
+        return 'The server is shutting down...'
 
     async def not_found(self, req: Request) -> None:
         return {'error': 'resource not found'}, 404
