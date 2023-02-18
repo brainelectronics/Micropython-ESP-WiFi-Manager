@@ -236,7 +236,7 @@ class WiFiManager(object):
         # finally
         self.run(host=ifconfig.ip, port=80, debug=True)
 
-        self.logger.debug('Finished running the PicoWeb application')
+        self.logger.debug('Finished running the Webserver application')
         self.scanning = False
         self.logger.debug('Stopped scanning thread')
 
@@ -779,7 +779,7 @@ class WiFiManager(object):
         @see available_urls property
         """
         available_pages = self.available_urls
-        content = await self._render_index_page(available_pages)
+        content = self._render_index_page(available_pages)
 
         return render_template(template='index.tpl', req=None, content=content)
 
@@ -800,7 +800,7 @@ class WiFiManager(object):
         0.02sec to complete
         """
         available_nets = self.latest_scan
-        content = await self._render_network_inputs(
+        content = self._render_network_inputs(
             available_nets=available_nets
         )
 
@@ -817,7 +817,7 @@ class WiFiManager(object):
         """Return rendered network inputs content to webpage"""
         available_nets = self.latest_scan
         selected_bssid = self._selected_network_bssid
-        content = await self._render_network_inputs(
+        content = self._render_network_inputs(
             available_nets=available_nets,
             selected_bssid=selected_bssid
         )
@@ -849,7 +849,7 @@ class WiFiManager(object):
         self.logger.info('WiFi user input content: {}'.format(form_data))
         # {'ssid': '', 'wifi_network': 'a0f3c1fbfc3c', 'password': 'qwertz'}
 
-        await self._save_wifi_config(form_data=form_data)
+        self._save_wifi_config(form_data=form_data)
 
         # empty response to avoid any redirects or errors due to none response
         return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
@@ -862,7 +862,7 @@ class WiFiManager(object):
         self.logger.info('Remove networks: {}'.format(form_data))
         # Remove networks: {'FRITZ!Box 7490': 'FRITZ!Box 7490'}
 
-        await self._remove_wifi_config(form_data=form_data)
+        self._remove_wifi_config(form_data=form_data)
 
         # redirect to '/configure'
         return redirect('/configure')
