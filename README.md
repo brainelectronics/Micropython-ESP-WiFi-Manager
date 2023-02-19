@@ -177,8 +177,9 @@ This is a list of available webpages
 |-----|-------------|
 | `/`   | Root index page, to choose from the available pages |
 | `/select` | Select and configure a network |
-| `/configure` | Manage already configured networks |
+| `/configure` | Manage already configured networks |
 | `/scan_result` | JSON of available networks |
+| `/shutdown` | Shutdown webserver and return from `run` function |
 
 To leave from the Webinterface, just press CTRL+C and wait until all threads
 finish running. This takes around 1 second. The device will return to its REPL
