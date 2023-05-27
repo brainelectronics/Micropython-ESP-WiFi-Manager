@@ -16,7 +16,10 @@ MicroPython WiFi Manager to configure and connect to networks
 	- [Install required tools](#install-required-tools)
 	- [Flash firmware](#flash-firmware)
 	- [Upload files to board](#upload-files-to-board)
-		- [Install package with pip](#install-package-with-pip)
+		- [Install package](#install-package)
+		- [General](#general)
+		- [Specific version](#specific-version)
+		- [Test version](#test-version)
 		- [Manually](#manually)
 			- [Upload files to board](#upload-files-to-board-1)
 			- [Install additional MicroPython packages](#install-additional-micropython-packages)
@@ -70,34 +73,73 @@ is no external PRSAM only the non SPIRAM version is working.
 
 ### Upload files to board
 
-#### Install package with pip
+#### Install package
 
 Connect your MicroPython board to a network
 
 ```python
 import network
 station = network.WLAN(network.STA_IF)
+station.active(True)
 station.connect('SSID', 'PASSWORD')
 station.isconnected()
 ```
 
-and install this lib on the MicroPython device like this
+#### General
+
+Install the latest package version of this lib on the MicroPython device
+
+```python
+import mip
+mip.install("github:brainelectronics/micropython-esp-wifi-manager")
+
+# maybe install the dependencies manually afterwards
+# mip.install("github:brainelectronics/micropython-modules")
+```
+
+For MicroPython versions below 1.19.1 use the `upip` package instead of `mip`
 
 ```python
 import upip
-# may use the latest test version of it, by adding test.pypi.org as the first
-# location to search for the package
-# upip.index_urls = ["https://test.pypi.org/pypi", "https://micropython.org/pi", "https://pypi.org/pypi"]
 upip.install('micropython-esp-wifi-manager')
-# its dependencies will be installed alongside
-
-# if test.pypi.org is added to the index urls, required depencendies won't be
-# installed if they are not available from test.pypi.org, may install them
-# manually
-# upip.index_urls = ["https://micropython.org/pi", "https://pypi.org/pypi"]
-# upip.install('micropython-ulogging')
-# upip.install('utemplate')
+# dependencies will be installed automatically
 ```
+
+#### Specific version
+
+Install a specific, fixed package version of this lib on the MicroPython device
+
+```python
+import mip
+# install a verions of a specific branch
+mip.install("github:brainelectronics/micropython-esp-wifi-manager", version="feature/support-mip")
+# install a tag version
+mip.install("github:brainelectronics/micropython-esp-wifi-manager", version="1.7.0")
+```
+
+#### Test version
+
+Install a specific release candidate version uploaded to
+[Test Python Package Index](https://test.pypi.org/) on every PR on the
+MicroPython device. If no specific version is set, the latest stable version
+will be used.
+
+```python
+import mip
+mip.install("github:brainelectronics/micropython-esp-wifi-manager", version="1.7.0-rc5.dev22")
+```
+
+For MicroPython versions below 1.19.1 use the `upip` package instead of `mip`
+
+```python
+import upip
+# overwrite index_urls to only take artifacts from test.pypi.org
+upip.index_urls = ['https://test.pypi.org/pypi']
+upip.install('micropython-esp-wifi-manager')
+```
+
+See also [brainelectronics Test PyPi Server in Docker][ref-brainelectronics-test-pypiserver]
+for a test PyPi server running on Docker.
 
 #### Manually
 
@@ -120,23 +162,28 @@ device and increase the performance (webpages are loading faster)
 ```bash
 mkdir /pyboard/lib/
 mkdir /pyboard/lib/microdot/
+mkdir /pyboard/lib/utemplate/
 mkdir /pyboard/lib/wifi_manager/
-mkdir /pyboard/lib/wifi_manager/static/
-mkdir /pyboard/lib/wifi_manager/static/css
-cp static/css/*.gz /pyboard/lib/wifi_manager/static/css
+mkdir /pyboard/lib/static/
+mkdir /pyboard/lib/static/css
+mkdir /pyboard/lib/static/js
+
+cp static/css/*.gz /pyboard/lib/static/css
+cp static/js/*.gz /pyboard/lib/static/js
 # around 24kB compared to uncompressed 120kB
 
 # optional, not used so far
-# mkdir /pyboard/lib/wifi_manager/static/js
-# cp static/js/*.gz /pyboard/lib/wifi_manager/static/js
+# mkdir /pyboard/lib/static/js
+# cp static/js/*.gz /pyboard/lib/static/js
 # around 12kB compared to uncompressed 40kB
 
-mkdir /pyboard/lib/wifi_manager/templates/
-cp templates/* /pyboard/lib/wifi_manager/templates/
+mkdir /pyboard/lib/templates/
+cp templates/* /pyboard/lib/templates/
 # around 20kB
 
 cp wifi_manager/* /pyboard/lib/wifi_manager/
 cp microdot/* /pyboard/lib/microdot/
+cp utemplate/* /pyboard/lib/utemplate/
 cp main.py /pyboard
 cp boot.py /pyboard
 # around 40kB
@@ -145,14 +192,20 @@ cp boot.py /pyboard
 ##### Install additional MicroPython packages
 
 As this package has not been installed with `upip` additional modules are
-required, which are not part of this repo. To install these modules on the
-device, connect to a network and install them via `upip` as follows
+required, which are not part of this repo.
+
+Connect the board to a network and install the package like this for
+MicroPython 1.20.0 or never
+
+```python
+import mip
+mip.install("github:brainelectronics/micropython-modules")
+```
+
+For MicroPython versions below 1.19.1 use the `upip` package instead of `mip`
 
 ```python
 import upip
-
-upip.install('utemplate')
-upip.install('micropython-ulogging')
 upip.install('micropython-brainelectronics-helper')
 ```
 
@@ -187,4 +240,5 @@ finish running. This takes around 1 second. The device will return to its REPL
 <!-- Links -->
 [ref-esptool]: https://github.com/espressif/esptool
 [ref-remote-upy-shell]: https://github.com/dhylands/rshell
+[ref-brainelectronics-test-pypiserver]: https://github.com/brainelectronics/test-pypiserver
 [ref-upy-firmware-download]: https://micropython.org/download/
