@@ -26,6 +26,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: Implementation :: MicroPython',
     ],
     keywords='micropython, brainelectronics, wifi, wifimanager, library',
     project_urls={
@@ -37,6 +38,7 @@ setup(
     packages=[
         'wifi_manager',
         'microdot',
+        'utemplate',
     ],
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
@@ -65,8 +67,6 @@ setup(
         )
     ],
     install_requires=[
-        'micropython-ulogging',
         'micropython-brainelectronics-helpers',
-        'utemplate',
     ]
 )
