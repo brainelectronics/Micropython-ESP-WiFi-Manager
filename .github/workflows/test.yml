@@ -1,5 +1,9 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+---
+
+# This workflow will install Python dependencies, run tests and lint with a
+# specific Python version
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: Test Python package
 
@@ -17,31 +21,41 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.9'
-    - name: Install test dependencies
-      run: |
-        pip install -r requirements-test.txt
-    - name: Lint with flake8
-      run: |
-        flake8 .
-    - name: Install deploy dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
-    - name: Build package
-      run: |
-        changelog2version \
-          --changelog_file changelog.md \
-          --version_file wifi_manager/version.py \
-          --version_file_type py \
-          --debug
-        python setup.py sdist
-        rm dist/*.orig
-    - name: Test built package
-      run: |
-        twine check dist/*
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements-test.txt
+      - name: Lint with flake8
+        run: |
+          flake8 .
+      - name: Install deploy dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
+      - name: Build package
+        run: |
+          changelog2version \
+            --changelog_file changelog.md \
+            --version_file wifi_manager/version.py \
+            --version_file_type py \
+            --debug
+          python setup.py sdist
+      - name: Test built package
+        # sdist call creates non twine conform "*.orig" files, remove them
+        run: |
+          rm dist/*.orig
+          twine check dist/*
+      - name: Validate mip package file
+        run: |
+          upy-package \
+            --setup_file setup.py \
+            --package_changelog_file changelog.md \
+            --package_file package.json \
+            --validate \
+            --ignore-version \
+            --ignore-deps
