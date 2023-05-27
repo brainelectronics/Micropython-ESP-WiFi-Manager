@@ -74,7 +74,7 @@
         ]
     ],
     "deps": [
-        "micropython-brainelectronics-helpers"
+        ["github:brainelectronics/micropython-modules", "develop"]
     ],
     "version": "1.11.0"
 }

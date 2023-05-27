@@ -57,4 +57,5 @@ jobs:
             --package_changelog_file changelog.md \
             --package_file package.json \
             --validate \
-            --ignore-version
+            --ignore-version \
+            --ignore-deps
