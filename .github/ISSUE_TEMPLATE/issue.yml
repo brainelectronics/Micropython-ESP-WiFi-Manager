@@ -1,0 +1,94 @@
+---
+
+name: "Default issue"
+description: Report any kind of issue
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please enter an explicit description of your issue
+      placeholder: Short and explicit description of your incident...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: |
+        Please enter an explicit description to reproduce this issue
+      value: |
+        1.
+        2.
+        3.
+        ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MicroPython version
+      description: Which MicroPython version are you using?
+      placeholder: v1.20.0
+    validations:
+      required: true
+  - type: dropdown
+    id: board
+    attributes:
+      label: MicroPython board
+      description: Which MicroPython board are you using?
+      options:
+        - pyboard
+        - Raspberry Pico
+        - ESP32
+        - ESP8266
+        - WiPy
+        - i.MXRT
+        - SAMD21/SAMD51
+        - Renesas
+        - Zephyr
+        - UNIX
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: package-version
+    attributes:
+      label: MicroPython ESP WiFi Manager version
+      description: Which version of this lib are you using?
+      value: |
+        # e.g. v1.9.0
+        # use the following command to get the used version
+        import os
+        from wifi_manager import version
+        print('MicroPython infos:', os.uname())
+        print('Used micropthon-esp-wifi-manager version:', version.__version__))
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Please copy and paste any relevant log output.
+        This will be automatically formatted into code, so no need for
+        backticks.
+      render: bash
+  - type: textarea
+    id: usercode
+    attributes:
+      label: User code
+      description: >
+        Please copy and paste any relevant user code.
+        This will be automatically formatted into Python code, so no need for
+        backticks.
+      render: python
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional informations
+      description: Please provide additional informations if available
+      placeholder: Some more informations
+    validations:
+      required: false
