@@ -1,6 +1,14 @@
 {
     "urls": [
         [
+            "boot.py",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/boot.py"
+        ],
+        [
+            "main.py",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/main.py"
+        ],
+        [
             "wifi_manager/__init__.py",
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/wifi_manager/__init__.py"
         ],
