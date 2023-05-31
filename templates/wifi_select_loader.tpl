@@ -22,7 +22,7 @@
           {% endfor %}
         </select>
         <input type="text" name="ssid" id="ssid" placeholder="Custom Network Name">
-        <input type="password" name="password" id="password" placeholder="Passwort" onkeydown="if(event.keyCode==13)document.getElementById('save').click()"/>
+        <input type="password" name="password" id="password" placeholder="Password" onkeydown="if(event.keyCode==13)document.getElementById('save').click()"/>
         <input type="submit" class="button" id="save" value="Save">
       </form>
       <form>
