@@ -20,6 +20,19 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.11.0] - 2023-05-27
+### Added
+- `package.json` file and installation instruction for `mip` usage, see #30
+- `utemplate` is part of this package to be independent from other packages, see #30
+- Content of `package.json` is validated on each test workflow run
+- GitHub issues template files
+
+### Removed
+- Dependency to `micropython-ulogging` and `utemplate` packages in `setup.py` file
+
+### Fixed
+- YAML syntax in all workflow files
+
 ## [1.10.0] - 2023-02-18
 ### Added
 - `microdot_asyncio` in `microdot` folder
@@ -248,8 +261,9 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.10.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.11.0...develop
 
+[1.11.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.11.0
 [1.10.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.10.0
 [1.9.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.9.0
 [1.8.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.8.0
