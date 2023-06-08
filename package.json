@@ -65,8 +65,8 @@
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/css/bootstrap.min.css.gz"
         ],
         [
-            "static/favicon.ico",
-            "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/favicon.ico"
+            "static/ico/favicon.ico",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/ico/favicon.ico"
         ],
         [
             "static/js/toast.js",

@@ -10,9 +10,9 @@ In case no network has been configured or no connection could be established
 to any of the configured networks within the timeout of each 5 seconds an
 AccessPoint is created.
 
-A simple Picoweb webserver is hosting the webpages to connect to new networks,
+A simple Microdot webserver hosts the webpages to connect to new networks,
 to remove already configured networks from the list of connections to
-establish and to get the latest available networks as JSON
+establish and to get the latest available networks as HTML or JSON.
 """
 
 # system packages
@@ -23,22 +23,42 @@ import _thread
 import time
 import ubinascii
 import ucryptolib
+import pkg_resources
+import aiorepl
+import uasyncio as asyncio
+import os
 
 # pip installed packages
 # https://github.com/miguelgrinberg/microdot
-from microdot.microdot_asyncio import Microdot, redirect, Request, Response, \
-    send_file
+from microdot.microdot_asyncio import Microdot, redirect, Request, Response
 from microdot import URLPattern
 from microdot.microdot_utemplate import render_template, init_templates
+from utemplate import compiled, recompile
 
 # custom packages
 from be_helpers.generic_helper import GenericHelper
 from be_helpers.message import Message
-from be_helpers.path_helper import PathHelper
 from be_helpers.wifi_helper import WifiHelper
 
 # typing not natively supported on micropython
 from be_helpers.typing import List, Tuple, Union, Callable
+
+
+def set_global_exception():
+    def handle_exception(loop, context):
+        import sys
+        sys.print_exception(context["exception"])
+        sys.exit()
+    loop = asyncio.get_event_loop()
+    loop.set_exception_handler(handle_exception)
+
+
+def path_exists(path):
+    try:
+        _ = os.stat(path)
+        return True
+    except OSError:
+        return False
 
 
 class WiFiManager(object):
@@ -59,9 +79,21 @@ class WiFiManager(object):
         self.logger = logger
         self.logger.disabled = quiet
         self._config_file = 'wifi-secure.json'
+        self.logger.debug('Config file: {}'.format(self._config_file))
 
         self.app = Microdot()
-        init_templates(template_dir='lib/templates')
+
+        Response.types_map['ico'] = 'image/x-icon'
+
+        # Check for existence of lib/templates
+        if path_exists('/lib/templates/'):
+            init_templates(template_dir='lib/templates',
+                           loader_class=recompile.Loader)
+        else:
+            self.logger.warning(
+                'Missing directory lib/templates; using pre-compiled')
+            init_templates(template_dir='templates',
+                           loader_class=compiled.Loader)
 
         self.wh = WifiHelper()
 
@@ -162,7 +194,7 @@ class WiFiManager(object):
         result = False
 
         # check wifi config file existance
-        if PathHelper.exists(path=self._config_file):
+        if path_exists(self._config_file):
             self.logger.debug('Encrypted wifi config file exists')
             loaded_cfg = self._load_wifi_config_data(path=self._config_file,
                                                      encrypted=True)
@@ -366,7 +398,7 @@ class WiFiManager(object):
         :type       encrypted:  bool, optional
         """
         # in case the file already exists, extend its data content
-        if PathHelper.exists(path=path):
+        if path_exists(path):
             existing_data = self._load_wifi_config_data(path=path,
                                                         encrypted=encrypted)
             self.logger.debug('Existing WiFi config data: {}'.
@@ -634,32 +666,15 @@ class WiFiManager(object):
         :returns:   Sub content of WiFi selection page
         :rtype:     str
         """
-        content = ""
-        if len(available_nets):
-            for ele in available_nets:
-                selected = ''
-                if ele['bssid'].decode('ascii') == selected_bssid:
-                    selected = "checked"
-                content += """
-                <input class="list-group-item-check" type="radio" name="bssid" id="{bssid}" value="{bssid}" onclick="remember_selected_element(this)" {state}>
-                <label class="list-group-item py-3" for="{bssid}">
-                  {ssid}
-                  <span class="d-block small opacity-50">
-                    Signal quality {quality}&#37;, BSSID {bssid}
-                  </span>
-                </label>
-                """.format(bssid=ele['bssid'],  # noqa: E501
-                           state=selected,
-                           ssid=ele['ssid'],
-                           quality=ele['quality'])
-        else:
-            # as long as no networks are available show a spinner
-            content = """
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            """
-
+        content = []
+        for ele in available_nets:
+            selected = ''
+            if ele['bssid'].decode('ascii') == selected_bssid:
+                selected = "checked"
+            content.append(dict(bssid=ele['bssid'].decode('ascii'),
+                                state=selected,
+                                ssid=ele['ssid'].decode('ascii'),
+                                quality=ele['quality']))
         return content
 
     def _save_wifi_config(self, form_data: dict) -> None:
@@ -822,7 +837,7 @@ class WiFiManager(object):
             selected_bssid=selected_bssid
         )
 
-        return content
+        return render_template(template='render_nets.tpl', content=content)
 
     # @app.route('/configure')
     async def wifi_configs(self, req: Request) -> None:
@@ -867,44 +882,64 @@ class WiFiManager(object):
         # redirect to '/configure'
         return redirect('/configure')
 
+    def _response_for_file(self, filename: str,
+                           allow_gz: bool = False) -> Response:
+        """
+        Return the Response object for a static file.
+        Static files are either served from the
+        /lib/static/<filetype> directory, or from pre-compiled strings
+        using pkg_resources in the 'static' namespace.
+        Assumes static files are separated into directories based on
+        their extension.
+
+        :param      filename:  The filename
+        :type       filename:  str
+
+        :param      allow_gz:  Whether to allow gzipped files to be served.
+        :type       allow_gz:  bool
+
+        :returns:   The response for the file.
+        :rtype:     Response
+        """
+        if '..' in filename:
+            return Response(body='Not found', status_code=404, headers={},
+                            reason='Directory traversal is not allowed')
+
+        # split the filename into parts, and get the extension
+        ext = filename.split('.')[-1]
+        # get the content-type for the extension
+        content_type = Response.types_map.get(ext, 'application/octet-stream')
+        headers = {}
+        headers['Content-Type'] = content_type
+        headers['Cache-Control'] = 'max-age=86400'
+        static_path = f"/lib/static/{ext}/{filename}"
+        if allow_gz:
+            zipped = static_path + '.gz'
+            if path_exists(zipped):
+                headers['Content-Encoding'] = 'gzip'
+                return Response(body=open(zipped, 'rb'), status_code=200,
+                                headers=headers)
+        elif path_exists(static_path):
+            return Response(body=open(static_path, 'rb'), status_code=200,
+                            headers=headers)
+        try:
+            f = pkg_resources.resource_stream('static', f"{ext}/{filename}")
+            return Response(body=f, status_code=200, headers=headers)
+        except KeyError:
+            return Response(body='File not found', status_code=404)
+
     # @app.route('/static/<path:path>')
     async def serve_static(self,
                            req: Request,
                            path: str) -> Union[str,
                                                Tuple[str, int],
                                                Tuple[str, int, dict]]:
-        if '..' in path:
-            # directory traversal is not allowed
-            return 'Not found', 404
-
-        response_header = {
-            'Cache-Control': 'max-age=86400',
-        }
-
-        ext = path.split('.')[-1]
-        complete_file_path = '/lib/' + 'static/' + ext + '/' + path
-
-        response_header['Content-Type'] = Response.types_map.get(
-            ext, 'application/octet-stream')
-
-        if 'gzip' in req.headers.get('Accept-Encoding', ''):
-            self.logger.debug('gzip accepted for {} file'.format(ext))
-            complete_file_path += '.gz'
-            response_header['Content-Encoding'] = 'gzip'
-
-        self.logger.debug('Send file {}'.format(complete_file_path))
-        self.logger.debug('Response header {}'.format(response_header))
-
-        f = open(complete_file_path, 'rb')
-
-        return f, 200, response_header
+        allow_gz = 'gzip' in req.headers.get('Accept-Encoding', '')
+        return self._response_for_file(path, allow_gz=allow_gz)
 
     # @app.route('/favicon.ico')
     async def serve_favicon(self, req: Request) -> None:
-        # return None, 204, {'Content-Type': 'application/json; charset=UTF-8'}
-        return send_file(filename='/lib/static/favicon.ico',
-                         status_code=200,
-                         content_type='image/x-icon')
+        return self._response_for_file('favicon.ico')
 
     # @app.route('/shutdown')
     async def shutdown(self, req: Request) -> None:
@@ -915,6 +950,14 @@ class WiFiManager(object):
 
     async def not_found(self, req: Request) -> None:
         return {'error': 'resource not found'}, 404
+
+    async def main(self, host, port, debug):
+        set_global_exception()  # set exception handler for debugging
+        server_task = asyncio.create_task(self.app.start_server(host=host,
+                                                                port=port,
+                                                                debug=debug))
+        repl_task = asyncio.create_task(aiorepl.task())
+        await asyncio.gather(server_task, repl_task)
 
     def run(self,
             host: str = '0.0.0.0',
@@ -931,14 +974,24 @@ class WiFiManager(object):
                             show debugger content
         :type       debug:  bool, optional
         """
-        self.logger.debug('Run app on {}:{} with debug: {}'.format(host,
-                                                                   port,
-                                                                   debug))
+        self.logger.info('Run app on {}:{} with debug: {}'.format(host,
+                                                                  port,
+                                                                  debug))
+
+        def before_request(req: Request) -> None:
+            gc.collect()
+            gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
+            free = gc.mem_free()
+            self.logger.info(f"Before request: {req.url}, free mem: {free}")
+
         try:
             # self.app.run()
             # self.app.run(debug=debug)
-            self.app.run(host=host, port=port, debug=debug)
+            # self.app.run(host=host, port=port, debug=debug)
+            self.logger.debug("Hooking before_request")
+            self.app.before_request(before_request)
+            asyncio.run(self.main(host=host, port=port, debug=debug))
         except KeyboardInterrupt:
-            self.logger.debug('Catched KeyboardInterrupt at run of web app')
+            self.logger.debug('Caught KeyboardInterrupt during run of web app')
         except Exception as e:
             self.logger.warning(e)

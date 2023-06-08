@@ -150,3 +150,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# compiled templates
+templates/*_tpl.py
+
+# VS Code settings
+.vscode

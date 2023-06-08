@@ -46,11 +46,11 @@
     <div class="list-group list-group-checkable">
       <form action="save_wifi_config" method="post" id="save_wifi_config_form">
         <div name="wifi_network" id="wifi_network">
-          {{ content }}
+        {% include "render_nets.tpl" content %}
         </div>
         <input type="text" class="w-100" name="ssid" id="ssid" placeholder="Custom Network Name">
         <br>
-        <input type="password" class="w-100" name="password" id="password" placeholder="Passwort" onkeydown="if(event.keyCode==13)document.getElementById('save').click()"/>
+        <input type="password" class="w-100" name="password" id="password" placeholder="Password" onkeydown="if(event.keyCode==13)document.getElementById('save').click()"/>
         <div class="list-group">
           <button type="submit" id="save" value="Save" class="btn btn-lg btn-primary list-group-item active">Submit</button>
           <form>
