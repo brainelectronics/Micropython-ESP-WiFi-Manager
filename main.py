@@ -22,4 +22,4 @@ if result is False:
 else:
     print('Successfully connected to a network :)')
 
-print('Returning to REPL')
+print('Finished booting steps of MicroPython WiFiManager')
