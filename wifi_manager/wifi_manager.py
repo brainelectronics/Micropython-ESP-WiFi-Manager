@@ -24,7 +24,6 @@ import time
 import ubinascii
 import ucryptolib
 import pkg_resources
-import aiorepl
 import uasyncio as asyncio
 import os
 
@@ -47,7 +46,7 @@ from be_helpers.typing import List, Tuple, Union, Callable
 def set_global_exception():
     def handle_exception(loop, context):
         import sys
-        sys.print_exception(context["exception"])
+        sys.print_exception(context["exception"], sys.stderr)
         sys.exit()
     loop = asyncio.get_event_loop()
     loop.set_exception_handler(handle_exception)
@@ -956,8 +955,16 @@ class WiFiManager(object):
         server_task = asyncio.create_task(self.app.start_server(host=host,
                                                                 port=port,
                                                                 debug=debug))
-        repl_task = asyncio.create_task(aiorepl.task())
-        await asyncio.gather(server_task, repl_task)
+        tasks = [server_task]
+
+        try:
+            import aiorepl
+            repl_task = asyncio.create_task(aiorepl.task())
+            tasks.append(repl_task)
+        except ImportError:
+            pass
+
+        await asyncio.gather(*tasks)
 
     def run(self,
             host: str = '0.0.0.0',
