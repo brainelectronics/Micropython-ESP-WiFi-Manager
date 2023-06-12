@@ -981,8 +981,6 @@ class WiFiManager(object):
         def before_request(req: Request) -> None:
             gc.collect()
             gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
-            free = gc.mem_free()
-            self.logger.info(f"Before request: {req.url}, free mem: {free}")
 
         try:
             # self.app.run()
