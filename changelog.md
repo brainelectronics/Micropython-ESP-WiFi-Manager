@@ -20,6 +20,17 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.12.0] - 2023-06-12
+### Added
+- Instructions for using this package `boot.py` and `main.py` files
+- `boot.py` and `main.py` are part of `package.json` and are installed into `wifi_manager/`, see #32 and #33
+
+### Changed
+- Ignore boot and main files during `package.json` validation
+
+### Removed
+- No device specific dependencies in `boot.py` to LED
+
 ## [1.11.0] - 2023-05-27
 ### Added
 - `package.json` file and installation instruction for `mip` usage, see #30
@@ -261,8 +272,9 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.11.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.12.0...develop
 
+[1.12.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.12.0
 [1.11.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.11.0
 [1.10.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.10.0
 [1.9.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.9.0
