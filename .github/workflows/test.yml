@@ -58,4 +58,5 @@ jobs:
             --package_file package.json \
             --validate \
             --ignore-version \
-            --ignore-deps
+            --ignore-deps \
+            --ignore-boot-main
