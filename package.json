@@ -5,6 +5,14 @@
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/wifi_manager/__init__.py"
         ],
         [
+            "wifi_manager/boot.py",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/boot.py"
+        ],
+        [
+            "wifi_manager/main.py",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/main.py"
+        ],
+        [
             "wifi_manager/version.py",
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/wifi_manager/version.py"
         ],
