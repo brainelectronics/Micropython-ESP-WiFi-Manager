@@ -18,6 +18,7 @@ MicroPython WiFi Manager to configure and connect to networks
 	- [Upload files to board](#upload-files-to-board)
 		- [Install package](#install-package)
 		- [General](#general)
+		- [Hook the WiFi Manager boot logic](#hook-the-wifi-manager-boot-logic)
 		- [Specific version](#specific-version)
 		- [Test version](#test-version)
 		- [Manually](#manually)
@@ -103,6 +104,23 @@ For MicroPython versions below 1.19.1 use the `upip` package instead of `mip`
 import upip
 upip.install('micropython-esp-wifi-manager')
 # dependencies will be installed automatically
+```
+
+#### Hook the WiFi Manager boot logic
+
+The `boot.py` and `main.py` files of this package are installed into `/lib` of
+the MicroPython device by `mip`. They are fully functional and without any
+other dependencies or MicroPython port specific commands. Simply add the
+following line to the `boot.py` file of your device.
+
+```python
+from wifi_manager import boot
+```
+
+And also add this line to your `main.py`, before your application code
+
+```python
+from wifi_manager import main
 ```
 
 #### Specific version
