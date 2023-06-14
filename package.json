@@ -79,6 +79,10 @@
         [
             "templates/select.tpl",
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/templates/select.tpl"
+        ],
+        [
+            "templates/render_nets.tpl",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/templates/render_nets.tpl"
         ]
     ],
     "deps": [
