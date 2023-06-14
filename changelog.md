@@ -20,6 +20,19 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.13.0] - 2023-06-12
+### Added
+  - Support for frozen, pre-compiled templates
+  - Support for frozen static resources
+  - Garbage collect before every request
+  - Added aiorepl to run() (if you have aiorepl)
+### Changed
+  - Rendering network list using included template rather than string appending
+  - Simplified static file serving
+  - Changed spelling of Passwort to Password throughout
+  - Moved favicon.ico under static/ico to avoid special-case handling
+### Removed
+  - Removed two unused templates
 ## [1.12.0] - 2023-06-12
 ### Added
 - Instructions for using this package `boot.py` and `main.py` files

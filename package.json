@@ -57,8 +57,8 @@
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/css/bootstrap.min.css.gz"
         ],
         [
-            "static/favicon.ico",
-            "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/favicon.ico"
+            "static/ico/favicon.ico",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/ico/favicon.ico"
         ],
         [
             "static/js/toast.js",
@@ -79,6 +79,10 @@
         [
             "templates/select.tpl",
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/templates/select.tpl"
+        ],
+        [
+            "templates/render_nets.tpl",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/templates/render_nets.tpl"
         ]
     ],
     "deps": [

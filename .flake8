@@ -48,6 +48,8 @@ exclude =
     R.py
     # external packages added to this package to be independent
     utemplate
+    # result of pre-compiling templates
+    templates/*_tpl.py
 
 # Provide a comma-separated list of glob patterns to add to the list of excluded ones.
 # extend-exclude =
