@@ -20,6 +20,14 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 <!-- ## [Unreleased] -->
 
 ## Released
+## [1.12.1] - 2023-06-16
+### Added
+- `pkg_resources` to `setup.py` and `package.json` as version 0.2.1 to prepare #33
+
+### Fixed
+- Instructions for using this package `boot.py` and `main.py` files in README
+- `microdot` added to the simulation requirements
+
 ## [1.12.0] - 2023-06-12
 ### Added
 - Instructions for using this package `boot.py` and `main.py` files
@@ -272,8 +280,9 @@ r"^\#\# \[\d{1,}[.]\d{1,}[.]\d{1,}\] \- \d{4}\-\d{2}-\d{2}$"
 - `sendfile` function implemented in same way as on Micropythons PicoWeb
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.12.0...develop
+[Unreleased]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager/compare/1.12.1...develop
 
+[1.12.1]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.12.1
 [1.12.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.12.0
 [1.11.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.11.0
 [1.10.0]: https://github.com/brainelectronics/Micropython-ESP-WiFi-Manager//tree/1.10.0

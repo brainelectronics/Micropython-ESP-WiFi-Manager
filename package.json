@@ -49,6 +49,10 @@
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/utemplate/source.py"
         ],
         [
+            "pkg_resources/pkg_resources.py",
+            "github:brainelectronics/Micropython-ESP-WiFi-Manager/pkg_resources/pkg_resources.py"
+        ],
+        [
             "static/css/bootstrap.min.css",
             "github:brainelectronics/Micropython-ESP-WiFi-Manager/static/css/bootstrap.min.css"
         ],
@@ -82,7 +86,8 @@
         ]
     ],
     "deps": [
-        ["github:brainelectronics/micropython-modules", "develop"]
+        ["github:brainelectronics/micropython-modules", "develop"],
+        ["pkg_resources", "0.2.1"]
     ],
     "version": "1.11.0"
 }
