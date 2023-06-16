@@ -111,16 +111,17 @@ upip.install('micropython-esp-wifi-manager')
 The `boot.py` and `main.py` files of this package are installed into `/lib` of
 the MicroPython device by `mip`. They are fully functional and without any
 other dependencies or MicroPython port specific commands. Simply add the
-following line to the `boot.py` file of your device.
+following line to the `boot.py` file of your device. *The following commands
+are not working if this package got installed by `upip`*
 
 ```python
-from wifi_manager import boot
+import wifi_manager.boot
 ```
 
 And also add this line to your `main.py`, before your application code
 
 ```python
-from wifi_manager import main
+import wifi_manager.main
 ```
 
 #### Specific version
